@@ -97,6 +97,29 @@ npm test
 
 零依赖自测，覆盖 JSON 容错解析、菜谱与详情归一化、演示数据、存储层（账号 / Key 打码 / 反馈 / 历史）以及全部 HTTP 接口。测试跑在系统临时目录的独立数据文件上，不会碰你的真实数据。
 
+## 别把密钥提交上去
+
+`.env` 和 `src/data/db.json`（存着账号与各用户的 API Key）已在 `.gitignore` 里，但 `.gitignore` 只挡误操作，挡不住 `git add -f`。
+
+所以装了一个提交前钩子，扫的是**暂存区内容**：
+
+```bash
+npm run check-secrets    # 手动扫全部历史，推之前自查
+```
+
+命中 `sk-` / `ghp_` / `LTAI` 等密钥特征，或试图提交 `.env`、`db.json` 时直接拒绝提交；文档里 `sk-xxxx` 这类示例会跳过，不误报。
+
+钩子在 `.git/hooks/pre-commit`（不随仓库分发），重新 clone 后需要再装一次：
+
+```bash
+printf '#!/bin/sh
+exec node "$(git rev-parse --show-toplevel)/scripts/check-secrets.js"
+' > .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
+> ⚠️ 扫描器一律用 `execFileSync` + 参数数组调 git，不拼 shell 字符串。Windows 下拼字符串会因转义问题让 git 静默失败，结果被当成「没扫到」，给出**假的通过**——那比不扫更危险。所以它在 git 出错时会 exit 2 明确报错，绝不伪装成通过。
+
 ## 项目结构
 
 ```
@@ -118,6 +141,7 @@ ai-recipe/
 │   └── store/db.js        # 本地 JSON 存储（账号 / Key / 记忆 / 历史）
 ├── scripts/
 │   ├── test.js            # 零依赖自测
+│   ├── check-secrets.js   # 提交前密钥扫描
 │   └── untar.js           # 无依赖 .tgz 解包工具（离线装包时用）
 └── .env                   # Key 与端口配置
 ```

@@ -7,8 +7,12 @@
  *
  * 手动跑：node scripts/check-secrets.js          （扫暂存区）
  *         node scripts/check-secrets.js --all    （扫全部历史，推之前自查用）
+ *
+ * 注意：一律用 execFileSync + 参数数组调 git，不要拼 shell 字符串。
+ * Windows 下 execSync 走 cmd.exe，正则里的特殊字符和中文路径都会把命令搞坏，
+ * 命令失败却被当成「没扫到」，反而给出假的「通过」——这比不扫更危险。
  */
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 
 const RULES = [
   { name: 'OpenAI / DeepSeek 风格密钥', re: /sk-[A-Za-z0-9_-]{16,}/ },
@@ -30,50 +34,64 @@ const BLOCKED_PATHS = [
 /** 说明文档里会写 sk-xxxx 这类示例，不该误报 */
 const PLACEHOLDER = /sk-(xxx|test-|your|abc|REAL|ATTACKER|例)/i;
 
-function sh(cmd) {
+/** 只用参数数组，不经过 shell */
+function git(args, { allowFail = true } = {}) {
   try {
-    return execSync(cmd, { encoding: 'utf8', maxBuffer: 1e8 });
+    return execFileSync('git', args, { encoding: 'utf8', maxBuffer: 1e8 });
   } catch (e) {
+    // git grep 没匹配到时退出码为 1，属于正常；其余退出码是真出错了
+    if (allowFail && e.status === 1 && !e.stderr) return e.stdout || '';
+    if (e.stderr && String(e.stderr).trim()) {
+      console.error(`\n⚠️  git ${args.slice(0, 2).join(' ')} 执行失败，扫描结果不可信：`);
+      console.error('   ' + String(e.stderr).trim().split('\n')[0]);
+      process.exit(2); // 明确失败，不要伪装成通过
+    }
     return e.stdout || '';
   }
+}
+
+function scanText(text, label, problems) {
+  text.split('\n').forEach((line, i) => {
+    if (PLACEHOLDER.test(line)) return;
+    for (const { name, re } of RULES) {
+      const m = line.match(re);
+      if (m) problems.push({ rule: name, where: `${label}:${i + 1}  …${m[0].slice(0, 12)}…` });
+    }
+  });
 }
 
 const scanAll = process.argv.includes('--all');
 const problems = [];
 
 if (scanAll) {
-  // 全历史扫描：遍历所有 blob 对象
-  const revs = sh('git rev-list --all').trim().split('\n').filter(Boolean);
-  for (const { name, re } of RULES) {
-    // git grep 的 -E 用 POSIX 语法，把 JS 正则源码转过去够用
-    const out = sh(`git grep -InE "${re.source.replace(/"/g, '\\"')}" ${revs.join(' ')}`);
-    for (const line of out.split('\n').filter(Boolean)) {
-      if (PLACEHOLDER.test(line)) continue;
-      problems.push({ rule: name, where: line.slice(0, 160) });
-    }
-  }
-} else {
-  // 暂存区扫描
-  const staged = sh('git diff --cached --name-only --diff-filter=ACMR').split('\n').filter(Boolean);
-
-  for (const file of staged) {
+  // 遍历所有可达对象里的 blob，逐个读内容扫描
+  const objects = git(['rev-list', '--objects', '--all']).split('\n').filter(Boolean);
+  let blobs = 0;
+  for (const line of objects) {
+    const sp = line.indexOf(' ');
+    if (sp < 0) continue; // 没有路径的是 commit/tree
+    const sha = line.slice(0, sp);
+    const path = line.slice(sp + 1);
+    if (git(['cat-file', '-t', sha]).trim() !== 'blob') continue;
+    blobs += 1;
     for (const re of BLOCKED_PATHS) {
-      if (re.test(file)) problems.push({ rule: '该文件禁止提交', where: file });
+      if (re.test(path)) problems.push({ rule: '该文件不该在历史里', where: path });
     }
+    scanText(git(['cat-file', 'blob', sha]), path, problems);
   }
+  console.log(`扫描了 ${blobs} 个文件对象（全部历史）`);
+} else {
+  const staged = git(['diff', '--cached', '--name-only', '--diff-filter=ACMR'])
+    .split('\n').filter(Boolean);
 
   for (const file of staged) {
-    if (BLOCKED_PATHS.some((re) => re.test(file))) continue;
-    const content = sh(`git show ":${file}"`);
-    if (!content) continue;
-    content.split('\n').forEach((line, i) => {
-      if (PLACEHOLDER.test(line)) return;
-      for (const { name, re } of RULES) {
-        const m = line.match(re);
-        if (m) problems.push({ rule: name, where: `${file}:${i + 1}  …${m[0].slice(0, 12)}…` });
-      }
-    });
+    if (BLOCKED_PATHS.some((re) => re.test(file))) {
+      problems.push({ rule: '该文件禁止提交', where: file });
+      continue;
+    }
+    scanText(git(['show', `:${file}`]), file, problems);
   }
+  console.log(`扫描了 ${staged.length} 个暂存文件`);
 }
 
 if (!problems.length) {
