@@ -30,6 +30,7 @@ const STORAGE = {
   PICKS: 'ai_recipe_picks',   // 勾选要做的菜，键是「第几天::菜名」
   DONE: 'ai_recipe_done',     // 做菜界面里已完成的菜
   START: 'ai_recipe_start',   // 第 1 天对应的真实日期
+  ING: 'ai_recipe_ing',       // 按食材模式下手里的食材
 };
 
 module.exports = { BASE_URL, DEV_URL, PROD_URL, STORAGE };

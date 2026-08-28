@@ -99,6 +99,7 @@ const api = {
   config: () => request('/api/config'),
   generate: (params) => request('/api/recipes/generate', { method: 'POST', data: params }),
   detail: (params) => request('/api/recipes/detail', { method: 'POST', data: params }),
+  byIngredients: (params) => request('/api/recipes/by-ingredients', { method: 'POST', data: params }),
 
   memory: () => request('/api/memory'),
   saveMemory: (patch) => request('/api/memory', { method: 'POST', data: patch }),

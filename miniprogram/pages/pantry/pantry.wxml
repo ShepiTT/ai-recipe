@@ -1,0 +1,145 @@
+<view class="page">
+
+  <view wx:if="{{needLogin}}" class="notice" bindtap="goLogin">
+    还没登录，点这里登录后才能用 →
+  </view>
+
+  <view class="card">
+    <!-- 食材录入 -->
+    <view class="field">
+      <text class="field-label">我现在有这些食材</text>
+      <view class="ing-input-row">
+        <input class="ing-input" value="{{input}}" bindinput="onInput" bindconfirm="addFromInput"
+               confirm-type="done" maxlength="20"
+               placeholder="输入后回车添加，如：白菜" placeholder-class="ph" />
+        <view class="ghost-btn" bindtap="addFromInput">添加</view>
+      </view>
+
+      <view class="ing-tags">
+        <text wx:if="{{!ingredients.length}}" class="muted">还没加食材</text>
+        <view wx:for="{{ingredients}}" wx:key="*this" class="ing-tag">
+          <text>{{item}}</text>
+          <text class="tag-x" data-name="{{item}}" catchtap="removeIngredient">×</text>
+        </view>
+      </view>
+      <view class="hint-row">
+        <text class="muted">盐、油、酱油、葱姜蒜这些基础调料默认当你有，不用填。</text>
+        <text wx:if="{{ingredients.length}}" class="link" bindtap="clearAll">清空</text>
+      </view>
+    </view>
+
+    <!-- 快捷食材 -->
+    <view class="field">
+      <text class="field-label">常见食材，点一下就加</text>
+      <view class="chips">
+        <view wx:for="{{quickList}}" wx:key="name"
+              class="chip {{item.on ? 'on' : ''}}"
+              data-name="{{item.name}}" bindtap="addQuick">{{item.name}}</view>
+      </view>
+    </view>
+
+    <!-- 人数 / 其他要求 -->
+    <view class="field">
+      <text class="field-label">用餐人数</text>
+      <view class="stepper">
+        <view class="stepper-btn" data-delta="-1" bindtap="stepPeople">−</view>
+        <view class="stepper-num">{{people}} 人</view>
+        <view class="stepper-btn" data-delta="1" bindtap="stepPeople">+</view>
+      </view>
+    </view>
+
+    <view class="field">
+      <text class="field-label">其他要求（选填）</text>
+      <input class="ing-input full" value="{{extra}}" bindinput="onExtra" maxlength="100"
+             placeholder="如：快手、不要油炸" placeholder-class="ph" />
+    </view>
+
+    <view class="switch-row">
+      <view class="switch-text">
+        <text>只用现有食材</text>
+        <text class="muted">一样都不用再买，可选范围会变窄</text>
+      </view>
+      <switch checked="{{strict}}" color="#e85d3d" bindchange="onStrict" />
+    </view>
+
+    <button class="primary-btn" loading="{{loading}}" disabled="{{loading || needLogin}}" bindtap="find">
+      🔍 看看能做什么菜
+    </button>
+
+    <!-- 排 N 天 -->
+    <view class="or-divider"><text>或者，帮我排开几天吃</text></view>
+
+    <view class="field">
+      <text class="field-label">天数：{{days}} 天</text>
+      <slider min="1" max="7" step="1" value="{{days}}" show-value="{{false}}"
+              block-size="24" activeColor="#4c9e6b" backgroundColor="#f0e4d8"
+              bindchange="onDays" />
+      <view class="range-marks"><text>1</text><text>7</text></view>
+    </view>
+
+    <view class="field">
+      <text class="field-label">每日餐次</text>
+      <view class="opt-row">
+        <view wx:for="{{slotList}}" wx:key="key"
+              class="opt {{item.on ? 'on' : ''}}"
+              data-key="{{item.key}}" bindtap="toggleSlot">
+          <text class="opt-emoji">{{item.emoji}}</text>
+          <text class="opt-name">{{item.name}}</text>
+        </view>
+      </view>
+    </view>
+
+    <button class="primary-btn alt" loading="{{loading}}" disabled="{{loading || needLogin}}" bindtap="planDays">
+      📅 用这些食材排 {{days}} 天
+    </button>
+    <view class="muted center">排出来的菜单能直接勾选、进「做菜」</view>
+  </view>
+
+  <!-- 「能做什么菜」的结果 -->
+  <block wx:if="{{result}}">
+    <view class="card result-head">
+      <view class="result-title">{{result.title}}</view>
+      <view class="muted" wx:if="{{result.summary}}">{{result.summary}}</view>
+      <view class="meta">
+        <text class="meta-chip">🥬 {{result.meta.ingredients.length}} 样食材</text>
+        <text class="meta-chip">🍽 {{result.dishes.length}} 道可做</text>
+        <text class="meta-chip" wx:if="{{result.readyCount}}">✅ {{result.readyCount}} 道不用再买</text>
+        <text class="meta-chip" wx:if="{{result.meta.strict}}">🔒 只用现有</text>
+        <text class="meta-chip" wx:if="{{result.mock}}">🧪 演示数据</text>
+      </view>
+      <view class="notice-line" wx:if="{{result.unusedText}}">这几样没派上用场：{{result.unusedText}}</view>
+      <view class="tips" wx:if="{{result.tips.length}}">
+        <view wx:for="{{result.tips}}" wx:key="*this">· {{item}}</view>
+      </view>
+    </view>
+
+    <view class="card dish {{item.ready ? 'ready' : ''}}"
+          wx:for="{{result.dishes}}" wx:key="name"
+          data-name="{{item.name}}" bindtap="openDish">
+      <view class="dish-head">
+        <text class="cat">{{item.category}}</text>
+        <text class="badge {{item.ready ? 'yes' : 'no'}}">
+          {{item.ready ? '✅ 现在就能做' : '还差 ' + item.missing.length + ' 样'}}
+        </text>
+      </view>
+      <view class="dish-name">{{item.name}}</view>
+      <view class="muted" wx:if="{{item.brief}}">{{item.brief}}</view>
+
+      <view class="use-row" wx:if="{{item.uses.length}}">
+        <text class="use-label">用你的</text>
+        <text wx:for="{{item.uses}}" wx:for-item="u" wx:key="*this" class="use-tag have">{{u}}</text>
+      </view>
+      <view class="use-row" wx:if="{{item.missing.length}}">
+        <text class="use-label">还需买</text>
+        <text wx:for="{{item.missing}}" wx:for-item="m" wx:key="*this" class="use-tag need">{{m}}</text>
+      </view>
+
+      <view class="dish-foot">
+        <text class="pill" wx:if="{{item.difficulty}}">{{item.difficulty}}</text>
+        <text class="pill" wx:if="{{item.time}}">{{item.time}}</text>
+        <text class="go">看做法 ›</text>
+      </view>
+    </view>
+  </block>
+
+</view>

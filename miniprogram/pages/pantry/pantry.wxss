@@ -1,0 +1,103 @@
+/* ===== 食材录入 ===== */
+.ing-input-row { display: flex; gap: 16rpx; align-items: center; }
+.ing-input {
+  flex: 1; min-width: 0; padding: 20rpx;
+  font-size: 27rpx; background: #fffdfb;
+  border: 2rpx solid var(--line); border-radius: 16rpx;
+}
+.ing-input.full { width: 100%; box-sizing: border-box; }
+.ph { color: #c4b5a8; }
+
+.ing-tags {
+  display: flex; flex-wrap: wrap; gap: 14rpx; align-items: center;
+  margin-top: 18rpx; min-height: 52rpx;
+}
+.ing-tag {
+  display: inline-flex; align-items: center; gap: 6rpx;
+  padding: 8rpx 12rpx 8rpx 20rpx; border-radius: 999rpx;
+  font-size: 25rpx; font-weight: 600;
+  color: var(--green); background: var(--green-soft);
+  border: 1rpx solid #bfe0cb;
+}
+.tag-x { padding: 0 6rpx; font-size: 28rpx; opacity: 0.6; }
+
+.hint-row { display: flex; align-items: flex-start; gap: 16rpx; margin-top: 12rpx; }
+.hint-row .muted { flex: 1; line-height: 1.5; }
+.link { font-size: 24rpx; color: var(--muted); text-decoration: underline; flex-shrink: 0; }
+
+/* ===== 人数步进 ===== */
+.stepper {
+  display: flex; align-items: stretch;
+  border: 2rpx solid var(--line); border-radius: 16rpx; overflow: hidden; background: #fffdfb;
+}
+.stepper-btn {
+  width: 100rpx; line-height: 84rpx; text-align: center;
+  font-size: 40rpx; font-weight: 700;
+  color: var(--primary); background: var(--primary-soft);
+}
+.stepper-num { flex: 1; line-height: 84rpx; text-align: center; font-size: 32rpx; font-weight: 700; }
+
+.range-marks {
+  display: flex; justify-content: space-between;
+  font-size: 22rpx; color: var(--muted); margin-top: -8rpx;
+}
+
+.switch-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 20rpx; margin-bottom: 32rpx;
+}
+.switch-text { display: flex; flex-direction: column; font-size: 27rpx; }
+
+/* 两个操作之间的分隔 */
+.or-divider {
+  display: flex; align-items: center; gap: 20rpx;
+  margin: 40rpx 0 8rpx; color: var(--muted); font-size: 24rpx;
+}
+.or-divider::before, .or-divider::after {
+  content: ''; flex: 1; height: 1rpx; background: var(--line);
+}
+.primary-btn.alt {
+  background: linear-gradient(120deg, var(--green), #6cb98a);
+  box-shadow: 0 8rpx 24rpx rgba(76, 158, 107, 0.3);
+}
+.center { display: block; text-align: center; margin-top: 14rpx; }
+
+/* ===== 结果 ===== */
+.result-title { font-size: 34rpx; font-weight: 800; color: var(--primary-dark); margin-bottom: 8rpx; }
+.meta { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 16rpx; }
+.meta-chip {
+  padding: 4rpx 18rpx; font-size: 22rpx;
+  color: var(--ink-soft); background: var(--panel-sunk);
+  border: 1rpx solid var(--line); border-radius: 999rpx;
+}
+.notice-line {
+  margin-top: 18rpx; padding: 16rpx 20rpx; font-size: 24rpx;
+  color: var(--amber); background: var(--amber-soft);
+  border: 1rpx solid #f0dfa4; border-radius: 14rpx;
+}
+.tips { margin-top: 16rpx; font-size: 24rpx; color: var(--ink-soft); line-height: 1.7; }
+
+/* 菜品卡片 */
+.dish { padding: 24rpx; }
+.dish.ready { border-left: 8rpx solid var(--green); }
+.dish-head { display: flex; align-items: center; justify-content: space-between; gap: 12rpx; margin-bottom: 12rpx; }
+.dish-name { font-size: 32rpx; font-weight: 700; margin-bottom: 6rpx; }
+.badge { font-size: 22rpx; font-weight: 600; padding: 4rpx 16rpx; border-radius: 999rpx; }
+.badge.yes { background: var(--green-soft); color: var(--green); }
+.badge.no { background: var(--amber-soft); color: var(--amber); }
+
+.use-row { display: flex; flex-wrap: wrap; gap: 10rpx; align-items: center; margin-top: 16rpx; }
+.use-label { font-size: 23rpx; color: var(--muted); flex-shrink: 0; }
+.use-tag { font-size: 23rpx; padding: 4rpx 16rpx; border-radius: 999rpx; }
+.use-tag.have { background: var(--green-soft); color: var(--green); }
+.use-tag.need { background: var(--amber-soft); color: var(--amber); }
+
+.dish-foot {
+  display: flex; align-items: center; gap: 12rpx; flex-wrap: wrap;
+  margin-top: 20rpx; padding-top: 18rpx; border-top: 1rpx dashed var(--line);
+}
+.pill {
+  font-size: 22rpx; padding: 4rpx 16rpx; border-radius: 999rpx;
+  color: var(--ink-soft); background: var(--panel-sunk); border: 1rpx solid var(--line);
+}
+.go { margin-left: auto; font-size: 25rpx; font-weight: 600; color: var(--primary); }

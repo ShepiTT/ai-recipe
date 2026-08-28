@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/pantry/pantry",
     "pages/plan/plan",
     "pages/cook/cook",
     "pages/dish/dish",
@@ -20,9 +21,22 @@
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
-      { "pagePath": "pages/index/index", "text": "配菜" },
-      { "pagePath": "pages/cook/cook", "text": "做菜" },
-      { "pagePath": "pages/me/me", "text": "我的" }
+      {
+        "pagePath": "pages/index/index",
+        "text": "配菜"
+      },
+      {
+        "pagePath": "pages/pantry/pantry",
+        "text": "按食材"
+      },
+      {
+        "pagePath": "pages/cook/cook",
+        "text": "做菜"
+      },
+      {
+        "pagePath": "pages/me/me",
+        "text": "我的"
+      }
     ]
   },
   "style": "v2",
