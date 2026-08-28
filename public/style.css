@@ -908,3 +908,31 @@ input[type="range"]::-moz-range-thumb {
   .mode-tabs, .pantry-go { display: none !important; }
   .pantry-card { break-inside: avoid; page-break-inside: avoid; }
 }
+
+/* 「按食材」里两个操作的分隔 */
+.or-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 22px 0 4px; color: var(--muted); font-size: 12.5px;
+}
+.or-divider::before, .or-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--line);
+}
+.primary-btn.alt {
+  background: linear-gradient(120deg, var(--green), #6cb98a);
+  box-shadow: 0 6px 18px rgba(76, 158, 107, 0.32);
+}
+/* 网页版的餐次按钮沿用小程序那套结构，这里补上样式 */
+.meal-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.slot-btn {
+  font-family: inherit; cursor: pointer; padding: 10px 4px 8px; color: var(--ink-soft);
+  border: 1.5px solid var(--line); border-radius: 12px; background: var(--panel-soft);
+  display: flex; flex-direction: column; align-items: center; gap: 1px; transition: all 0.15s;
+}
+.slot-btn span { font-size: 19px; line-height: 1.2; filter: grayscale(0.7); transition: filter 0.15s; }
+.slot-btn b { font-size: 13px; }
+.slot-btn:hover { border-color: var(--accent); }
+.slot-btn.on {
+  border-color: var(--primary); background: var(--primary-soft); color: var(--primary-dark);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+.slot-btn.on span { filter: none; }

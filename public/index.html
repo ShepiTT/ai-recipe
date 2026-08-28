@@ -139,7 +139,26 @@
       </label>
 
       <button id="findBtn" class="primary-btn">🔍 看看能做什么菜</button>
-      <p class="kbd-hint muted">快捷键：Ctrl / ⌘ + Enter</p>
+
+      <div class="or-divider"><span>或者，帮我排开几天吃</span></div>
+
+      <div class="field">
+        <label for="pantryDays">天数：<b id="pantryDaysLabel">2</b> 天</label>
+        <input type="range" id="pantryDays" min="1" max="7" step="1" value="2" />
+        <div class="range-marks"><span>1</span><span>7</span></div>
+      </div>
+
+      <div class="field">
+        <label>每日餐次</label>
+        <div class="meal-slots" id="pantrySlots" role="group" aria-label="每日餐次">
+          <button type="button" class="slot-btn" data-slot="breakfast" aria-pressed="false"><span>🌅</span><b>早餐</b></button>
+          <button type="button" class="slot-btn on" data-slot="lunch" aria-pressed="true"><span>☀️</span><b>午餐</b></button>
+          <button type="button" class="slot-btn on" data-slot="dinner" aria-pressed="true"><span>🌙</span><b>晚餐</b></button>
+        </div>
+      </div>
+
+      <button id="planFromPantryBtn" class="primary-btn alt">📅 用这些食材排 <b id="planDaysEcho">2</b> 天</button>
+      <p class="kbd-hint muted">排出来的菜单能直接勾选、进「去做菜」</p>
     </div>
   </aside>
 

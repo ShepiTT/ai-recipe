@@ -355,6 +355,23 @@ async function main() {
     method: 'POST', token: tk, body: { ingredients: ['鸡蛋', '鸡蛋', ' 鸡蛋 '] },
   })).data.meta.ingredients.length, 1);
 
+  const planFromPantry = await call('/api/recipes/generate', {
+    method: 'POST', token: tk,
+    body: { people: 2, days: 2, meals: ['lunch', 'dinner'], ingredients: ['鸡蛋', '豆腐', '龙虾'], useMemory: false },
+  });
+  eq('带食材排菜单', planFromPantry.status, 200);
+  eq('仍是按天菜单结构', planFromPantry.data.days.length, 2);
+  ok('如实报出用上了哪些', Array.isArray(planFromPantry.data.usedFromPantry));
+  ok('菜库里没有的龙虾算没用上', planFromPantry.data.unusedFromPantry.includes('龙虾'));
+  ok('采购清单不含已有食材', !planFromPantry.data.shoppingList.some((i) => i.name === '鸡蛋' || i.name === '豆腐'),
+    planFromPantry.data.shoppingList.map((i) => i.name).slice(0, 5));
+  eq('meta 记录了食材', planFromPantry.data.meta.ingredients.length, 3);
+
+  const plainPlan = await call('/api/recipes/generate', {
+    method: 'POST', token: tk, body: { people: 2, days: 1, useMemory: false },
+  });
+  ok('不带食材时没有这两个字段', !('usedFromPantry' in plainPlan.data));
+
   const hist = await call('/api/history', { token: tk });
   eq('历史列表有 2 条', hist.data.length, 2);
   ok('历史列表不含完整菜单', hist.data.every((h) => h.plan === undefined));

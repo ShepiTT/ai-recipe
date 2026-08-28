@@ -23,6 +23,9 @@
 - 盐、油、酱油、葱姜蒜等基础调料默认视为齐全，不算缺料
 - **「只用现有食材」开关**：勾上后只留一样都不用再买的菜
 - 结果里会提示**哪些食材没派上用场**，剩的还得想办法
+- **📅 还能直接排成 N 天菜单**：选天数 + 早/中/晚餐次，AI 围绕现有食材排开，目标是尽量吃完不浪费；
+  采购清单自动变成「还需补买」（已有的不再列），顶部显示「用了 3/5 样现有食材」。
+  排出来的就是标准菜单，能直接勾选、进「去做菜」
 
 **个性化记忆**
 
@@ -184,7 +187,7 @@ ai-recipe/
 | GET | `/api/keys` | 当前用户的 Key 状态（打码） |
 | POST | `/api/keys` | 保存/清除某服务商的 Key（传空串＝清除） |
 | GET | `/api/config` | 服务商与模型列表、口味选项、演示模式状态 |
-| POST | `/api/recipes/generate` | 生成菜谱（`people` / `days` / `tastes` / `mealType` / `meals` / `extra` / `useMemory` / `thinking`） |
+| POST | `/api/recipes/generate` | 生成菜谱（`people` / `days` / `tastes` / `mealType` / `meals` / `extra` / `useMemory` / `thinking`）<br>可选传 `ingredients`：围绕现有食材排，采购清单只列还需补买的 |
 | POST | `/api/recipes/by-ingredients` | 按现有食材推荐能做的菜（`ingredients` / `people` / `strict` / `tastes` / `extra`） |
 | POST | `/api/recipes/detail` | 生成单道菜的详细做法（同样接受 `thinking`） |
 | GET / POST | `/api/memory` | 读取 / 更新个人口味记忆 |
@@ -228,6 +231,12 @@ ai-recipe/
 **勾选必须按天归属。** 同一道菜可能出现在第 1 天和第 3 天，如果勾选只存菜名，勾了第 1 天会让第 3 天也跟着亮。所以前端存的是 `第几天::菜名`（`picks`），做菜界面据此按天过滤、完成进度也按天独立；提交给记忆的才是去重后的菜名（`dishes`）。历史回看优先用 `picks` 精确还原，老记录没有这个字段就退回本地草稿。
 
 **模型报的「用了你的食材」不能全信。** 它很爱把用户没提过的东西写进 `uses`（比如把「葱花」算成你的食材）。所以 `normalizeDish` 只保留能和用户原始输入对上的项（支持「白菜」对上「大白菜」这类包含关系），对不上的一律挪进 `missing`——「用了你的哪几样」必须是可信的，否则这个功能就没意义了。
+
+**同名 class 的事件绑定必须限定作用域。** 「配菜单」和「按食材」都有早/中/晚三个 `.slot-btn`，
+最初两处都用 `document.querySelectorAll('.slot-btn')`，结果配菜单的 handler 把两组共 6 个按钮全绑上了——
+点一下 pantry 的按钮，两个 handler 各 toggle 一次正好抵消，**看起来就是「点了没反应」**；
+更隐蔽的是 `selectedMeals()` 也没作用域，配菜单读餐次时会把另一组的状态算进来。
+现在一律写成 `#mealSlots .slot-btn` / `#pantrySlots .slot-btn`。
 
 ## 前端资源版本
 

@@ -198,6 +198,11 @@ function readPlanParams(body) {
     mealType: ['banquet', 'family', 'simple'].includes(body.mealType) ? body.mealType : 'family',
     meals: recipe.normalizeMeals(body.meals ?? body.mealsPerDay),
     extra: String(body.extra || '').slice(0, 300),
+    // 可选：带上现有食材，菜单会围绕它们设计，采购清单只列还需补买的
+    ingredients: [...new Set(
+      (Array.isArray(body.ingredients) ? body.ingredients : [])
+        .map((x) => String(x).trim().slice(0, 20)).filter(Boolean)
+    )].slice(0, 30),
   };
 }
 
@@ -214,7 +219,7 @@ router.post('/recipes/generate', requireAuth, wrap(async (req, res) => {
   const profile = useMemory ? db.getProfile(username) : null;
 
   const base = readPlanParams(req.body);
-  const blocked = await guardText(req, [base.extra, ...base.tastes]);
+  const blocked = await guardText(req, [base.extra, ...base.tastes, ...base.ingredients]);
   if (blocked) return fail(res, 400, blocked);
 
   // 未手动勾选口味时，沿用记忆里的偏好

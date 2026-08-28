@@ -64,9 +64,17 @@ function buildMemoryBlock(profile) {
   return lines.length ? `\n【用户记忆与偏好】\n${lines.join('\n')}\n` : '';
 }
 
-function buildSystemPrompt() {
+function buildSystemPrompt(hasPantry) {
+  const pantryRules = hasPantry ? `
+【用户已有食材，这是本次的核心约束】
+A. 尽最大可能把用户列出的食材用完、用尽，这是首要目标，不要让食材剩着浪费；
+B. 同一样食材可以在不同天用不同做法，但别每天重样；
+C. shoppingList 里**只列还需要补买的**，用户已有的不要再列进去；
+D. usedFromPantry 如实填写你实际用到了用户现有食材里的哪几样（必须是用户原词）；
+E. 确实用不上的，如实放进 unusedFromPantry，不要硬塞。
+` : '';
   return `你是一位经验丰富的中式营养配餐师兼宴席设计师。你需要根据用户需求设计菜谱。
-要求：
+${pantryRules}要求：
 1. 菜品搭配合理：荤素平衡、冷热搭配、有汤有菜、口味层次丰富、颜色好看；
 2. 同一天内菜品口味和食材尽量不重复；不同天之间也尽量避免重复菜品；
 3. 尊重用户人数（按人数给出采购量参考）、口味与用餐类型；
@@ -94,12 +102,14 @@ function buildSystemPrompt() {
   ],
   "shoppingList": [
     { "name": "食材名", "amount": "总量参考（按给定人数与天数）", "category": "${SHOP_CATEGORIES.join('|')}" }
-  ],
+  ],${hasPantry ? `
+  "usedFromPantry": ["用到的用户现有食材"],
+  "unusedFromPantry": ["没用上的用户现有食材"],` : ''}
   "tips": ["1-3 条备餐/采买建议，例如提前腌制、可分批采买等"]
 }`;
 }
 
-function buildUserPrompt({ people, days, tastes, mealType, meals, extra }, profile) {
+function buildUserPrompt({ people, days, tastes, mealType, meals, extra, ingredients }, profile) {
   const memory = buildMemoryBlock(profile);
   const mealDesc = MEAL_TYPES[mealType] || mealType || MEAL_TYPES.family;
   const tasteStr = tastes?.length ? tastes.join('、') : '不限';
@@ -114,6 +124,10 @@ function buildUserPrompt({ people, days, tastes, mealType, meals, extra }, profi
 - 用餐类型：${mealDesc}
 - 每餐菜品数量：正餐各 ${min}-${max} 道（早餐从简，1-2 项即可）
 - 只需要输出上面列出的餐次，不要自作主张增减餐次
+${ingredients?.length ? `
+【我现在已有这些食材】${ingredients.join('、')}
+请优先围绕它们设计，尽量用完；采购清单里只写还需补买的，已有的别再列。
+盐、油、酱油、醋、糖、葱姜蒜等基础调料默认我都有。` : ''}
 ${extra ? `- 其他要求：${extra}` : ''}${memory}
 
 请务必输出完整的 ${days} 天，每天都只包含「${labels.join('、')}」这几餐；结合用户记忆做个性化推荐。`;
@@ -180,11 +194,30 @@ function normalizePlan(plan, params = {}) {
   const tipsSrc = Array.isArray(src.tips) ? src.tips : src.tips ? [src.tips] : [];
   const typeLabel = MEAL_TYPE_LABELS[params.mealType] || '定制';
 
+  // 带了现有食材时，核对模型报的「用了哪些」——它很爱把用户没提过的算进去
+  const owned = params.ingredients || [];
+  let usedFromPantry = [];
+  let unusedFromPantry = [];
+  if (owned.length) {
+    const claimed = Array.isArray(src.usedFromPantry) ? src.usedFromPantry.map((x) => str(x, 30)) : [];
+    for (const c of claimed) {
+      const hit = owned.includes(c) ? c : owned.find((o) => o.includes(c) || c.includes(o));
+      if (hit && !usedFromPantry.includes(hit)) usedFromPantry.push(hit);
+    }
+    // 模型漏报时兜底：菜名或采购项里出现过的也算用上了
+    const haystack = JSON.stringify(days);
+    for (const o of owned) {
+      if (!usedFromPantry.includes(o) && haystack.includes(o)) usedFromPantry.push(o);
+    }
+    unusedFromPantry = owned.filter((o) => !usedFromPantry.includes(o));
+  }
+
   return {
     title: str(src.title, 60) || `${typeLabel}${days.length}天菜单`,
     summary: str(src.summary || src.description, 300),
     days,
     shoppingList,
+    ...(owned.length ? { usedFromPantry, unusedFromPantry } : {}),
     tips: tipsSrc.map((t) => str(t, 120)).filter(Boolean).slice(0, 5),
     meta: {
       people: params.people,
@@ -193,6 +226,7 @@ function normalizePlan(plan, params = {}) {
       mealTypeLabel: typeLabel,
       meals: normalizeMeals(params.meals),
       tastes: params.tastes || [],
+      ingredients: owned,
       generatedAt: new Date().toISOString(),
     },
   };
@@ -291,12 +325,17 @@ function mealComposition(mealType) {
 }
 
 /** 无 Key 时的演示数据：结构与真实生成结果完全一致 */
-function mockPlan({ people = 2, days = 1, tastes = [], mealType = 'family', meals: mealsInput, mealsPerDay }) {
+function mockPlan({ people = 2, days = 1, tastes = [], mealType = 'family', meals: mealsInput, mealsPerDay, ingredients = [] }) {
   const typeLabel = MEAL_TYPE_LABELS[mealType] || '家常';
   const cursor = new Map(); // 分类 -> 已取到第几个，保证整期菜单尽量不重样
   const used = new Set();
   const pick = (cat) => {
-    const pool = DISH_LIB.filter((d) => d.cat === cat);
+    let pool = DISH_LIB.filter((d) => d.cat === cat);
+    // 带了现有食材时，优先挑能用上它们的菜
+    if (ingredients.length) {
+      const matched = pool.filter((d) => (d.ing || []).some(([n]) => ingredients.some((o) => o.includes(n) || n.includes(o))));
+      if (matched.length) pool = matched;
+    }
     if (!pool.length) return null;
     const start = cursor.get(cat) || 0;
     for (let i = 0; i < pool.length; i++) {
@@ -312,9 +351,12 @@ function mockPlan({ people = 2, days = 1, tastes = [], mealType = 'family', meal
   };
 
   const shop = new Map();
+  const hitPantry = new Set();   // 实际用到了用户现有食材里的哪几样
   const addShop = (dish) => {
     for (const [name, per] of dish.ing || []) {
       shop.set(name, (shop.get(name) || 0) + per);
+      const owned = ingredients.find((o) => o.includes(name) || name.includes(o));
+      if (owned) hitPantry.add(owned);
     }
   };
 
@@ -358,13 +400,20 @@ function mockPlan({ people = 2, days = 1, tastes = [], mealType = 'family', meal
     daysOut.push({ day: d, meals });
   }
 
-  const shoppingList = [...shop.entries()].map(([name, per]) => ({
-    name,
-    amount: formatAmount(name, per, people),
-    category: SHOP_CATEGORY_OF(name),
-  }));
+  const shoppingList = [...shop.entries()]
+    // 用户已有的不再列进采购清单，那是「还需补买」的清单
+    .filter(([name]) => !ingredients.some((o) => o.includes(name) || name.includes(o)))
+    .map(([name, per]) => ({
+      name,
+      amount: formatAmount(name, per, people),
+      category: SHOP_CATEGORY_OF(name),
+    }));
 
   return {
+    ...(ingredients.length ? {
+      usedFromPantry: [...hitPantry],
+      unusedFromPantry: ingredients.filter((o) => !hitPantry.has(o)),
+    } : {}),
     title: `${typeLabel} · ${days} 天定制菜单（演示数据）`,
     summary: `为 ${people} 人设计的${typeLabel}菜单${tastes?.length ? `，偏${tastes.join('/')}` : ''}，荤素冷热均衡搭配。配置真实 API Key 后将由大模型生成完全个性化的结果。`,
     days: daysOut,
@@ -379,7 +428,7 @@ function mockPlan({ people = 2, days = 1, tastes = [], mealType = 'family', meal
 
 async function generatePlan(params, { provider, model, apiKey, thinking, chatJSON }, profile) {
   const messages = [
-    { role: 'system', content: buildSystemPrompt() },
+    { role: 'system', content: buildSystemPrompt(Boolean(params.ingredients?.length)) },
     { role: 'user', content: buildUserPrompt(params, profile) },
   ];
   const raw = await chatJSON({ provider, model, apiKey, thinking, messages, temperature: 0.85, maxTokens: 8000 });

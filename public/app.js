@@ -379,12 +379,12 @@ function restorePrefs() {
 
 /** 当前勾选的餐次，按早→中→晚的固定顺序返回 */
 function selectedMeals() {
-  return [...document.querySelectorAll('.slot-btn.on')].map((b) => b.dataset.slot);
+  return [...document.querySelectorAll('#mealSlots .slot-btn.on')].map((b) => b.dataset.slot);
 }
 
 function setMeals(list) {
   const want = new Set(list);
-  document.querySelectorAll('.slot-btn').forEach((b) => {
+  document.querySelectorAll('#mealSlots .slot-btn').forEach((b) => {
     const on = want.has(b.dataset.slot);
     b.classList.toggle('on', on);
     b.setAttribute('aria-pressed', String(on));
@@ -435,7 +435,7 @@ function initForm() {
   document.querySelectorAll('.type-card').forEach((card) => {
     card.addEventListener('click', () => { selectType(card.dataset.type); savePrefs(); });
   });
-  document.querySelectorAll('.slot-btn').forEach((btn) => {
+  document.querySelectorAll('#mealSlots .slot-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       const on = btn.classList.contains('on');
       // 至少保留一餐，否则生成出来是空的
@@ -770,6 +770,7 @@ function renderMeta(plan) {
     plan.days?.length && `📅 ${plan.days.length} 天`,
     m.mealTypeLabel && `🍽 ${m.mealTypeLabel}`,
     m.tastes?.length && `🌶 ${m.tastes.join('/')}`,
+    m.ingredients?.length && `🥬 用了 ${(plan.usedFromPantry || []).length}/${m.ingredients.length} 样现有食材`,
     plan.fromHistory ? '🕐 历史回看' : m.model && `🤖 ${m.model}`,
     !plan.fromHistory && m.thinking && '🧠 深度思考',
     plan.mock && '🧪 演示数据',
@@ -1002,6 +1003,9 @@ async function syncFeedbackFromProfile() {
 function renderShopping() {
   const wrap = $('shoppingList');
   wrap.innerHTML = '';
+  // 带了现有食材时，清单里只有还得买的，标题要说清楚
+  const fromPantry = Boolean(state.plan?.meta?.ingredients?.length);
+  document.querySelector('.shopping-head h3').textContent = fromPantry ? '🛒 还需补买' : '🛒 采购清单';
   const items = state.plan?.shoppingList || [];
   if (!items.length) {
     wrap.innerHTML = '<p class="muted">本次生成没有返回采购清单。</p>';
@@ -1924,6 +1928,26 @@ function initPantry() {
   $('pantryPeople').addEventListener('change', clamp);
 
   $('findBtn').addEventListener('click', findByIngredients);
+  $('planFromPantryBtn').addEventListener('click', planFromPantry);
+
+  const pd = $('pantryDays');
+  const syncPantryDays = () => {
+    $('pantryDaysLabel').textContent = pd.value;
+    $('planDaysEcho').textContent = pd.value;
+    pd.style.setProperty('--fill', ((pd.value - pd.min) / (pd.max - pd.min)) * 100 + '%');
+  };
+  pd.addEventListener('input', syncPantryDays);
+  syncPantryDays();
+
+  document.querySelectorAll('#pantrySlots .slot-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const on = btn.classList.contains('on');
+      // 至少留一餐，否则排出来是空的
+      if (on && pantryMeals().length === 1) return toast('至少要选一餐', 'warn');
+      btn.classList.toggle('on', !on);
+      btn.setAttribute('aria-pressed', String(!on));
+    });
+  });
 
   document.querySelectorAll('.mode-tab').forEach((t) => {
     t.addEventListener('click', () => switchMode(t.dataset.mode));
@@ -2000,6 +2024,59 @@ function renderIngredients() {
     c.classList.toggle('on', state.ingredients.includes(c.textContent));
   });
   $('findBtn').disabled = state.ingredients.length === 0;
+}
+
+/** 按早→中→晚的固定顺序返回勾选的餐次 */
+function pantryMeals() {
+  return [...document.querySelectorAll('#pantrySlots .slot-btn.on')].map((b) => b.dataset.slot);
+}
+
+/**
+ * 用现有食材排 N 天菜单。
+ * 走的是 /recipes/generate（多传 ingredients），所以输出结构和「配菜单」完全一致，
+ * 渲染、选菜、去做菜整条链路都能直接复用。
+ */
+async function planFromPantry() {
+  if (state.loading) return;
+  if (!state.ingredients.length) return toast('先加几样食材', 'warn');
+
+  const days = parseInt($('pantryDays').value) || 1;
+  setLoading(true, `正在用你的食材排 ${days} 天…`);
+  try {
+    const plan = await api('/api/recipes/generate', {
+      method: 'POST',
+      body: JSON.stringify({
+        ingredients: state.ingredients,
+        people: parseInt($('pantryPeople').value) || 2,
+        days,
+        meals: pantryMeals(),
+        mealType: document.querySelector('.type-card.active')?.dataset.type || 'family',
+        tastes: [...document.querySelectorAll('#tasteChips .chip.on')].map((c) => c.textContent),
+        extra: $('pantryExtra').value.trim(),
+        useMemory: $('useMemory').checked,
+        provider: $('providerSelect').value,
+        model: $('modelSelect').value,
+        thinking: $('deepThinking').checked,
+      }),
+    });
+    state.plan = plan;
+    state.dayIndex = 0;
+    state.cooked = new Set();
+    state.startDate = '';
+    state.done.clear();
+    writeJSON(cookKeyOf(state.user?.username, plan), []);
+    // 排出来的是标准菜单，切回配菜单视图复用整套渲染
+    switchMode('plan');
+    renderPlan();
+    persistPlan();
+    const left = plan.unusedFromPantry?.length;
+    toast(left ? `排好了，还剩 ${left} 样没用上：${plan.unusedFromPantry.join('、')}` : '排好了，食材全都用上了 🎉',
+      'ok', 3600);
+  } catch (e) {
+    toast('排不出来：' + e.message, 'err', 4000);
+  } finally {
+    setLoading(false);
+  }
 }
 
 async function findByIngredients() {
