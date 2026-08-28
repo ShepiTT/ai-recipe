@@ -1,0 +1,80 @@
+<view class="page" wx:if="{{ready}}">
+
+  <!-- 日期头：只显示日期，不显示时分 -->
+  <view class="card date-card">
+    <view class="date-nav">
+      <view class="nav-btn {{canPrev ? '' : 'off'}}" bindtap="prevDay">‹</view>
+      <view class="date-mid">
+        <view class="date-text">{{dateText}}</view>
+        <view class="muted">{{dayText}}</view>
+      </view>
+      <view class="nav-btn {{canNext ? '' : 'off'}}" bindtap="nextDay">›</view>
+    </view>
+    <view class="date-actions">
+      <view class="ghost-btn" wx:if="{{!isToday}}" bindtap="backToToday">回到今天</view>
+      <view class="ghost-btn" bindtap="goPlan">看完整菜单</view>
+    </view>
+  </view>
+
+  <!-- 进度 -->
+  <view class="progress-row" wx:if="{{dishCount}}">
+    <view class="progress-bar"><view class="progress-fill" style="width:{{percent}}%"></view></view>
+    <text class="muted">{{doneCount}} / {{dishCount}} 道已完成{{doneCount === dishCount ? '　🎉 收工！' : ''}}</text>
+  </view>
+
+  <!-- 今天要做的菜 -->
+  <view class="card" wx:for="{{meals}}" wx:key="type" wx:for-item="meal">
+    <view class="meal-head">
+      <text class="meal-tag">{{meal.type}}</text>
+      <text class="staple" wx:if="{{meal.staple}}">🍚 {{meal.staple}}</text>
+    </view>
+    <view wx:for="{{meal.dishes}}" wx:key="name" wx:for-item="dish"
+          class="cook-dish {{dish.done ? 'done' : ''}}">
+      <view class="cook-check" data-name="{{dish.name}}" catchtap="toggleDone">
+        <text class="check-box {{dish.done ? 'on' : ''}}">{{dish.done ? '✓' : ''}}</text>
+      </view>
+      <view class="cook-main" data-name="{{dish.name}}" bindtap="openDish">
+        <view class="cook-name">{{dish.name}}</view>
+        <view class="muted">{{dish.category}}{{dish.brief ? ' · ' + dish.brief : ''}}</view>
+      </view>
+      <text class="arrow">›</text>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{!meals.length}}">
+    <view class="muted" style="text-align:center;padding:40rpx 0">
+      这一天你没有勾选要做的菜。<br/>回菜单勾几道，或者翻到别的日期。
+    </view>
+  </view>
+
+  <!-- 今日食材汇总 -->
+  <view class="card">
+    <view class="ing-head">
+      <text class="section-title">🥬 今日食材汇总</text>
+      <view class="ghost-btn" wx:if="{{dishCount}}" bindtap="summarize">
+        {{ingLoading ? '汇总中…' : (ingLoaded ? '重新汇总' : '汇总今日食材')}}
+      </view>
+    </view>
+
+    <view class="muted" wx:if="{{ingHint}}">{{ingHint}}</view>
+
+    <block wx:for="{{ingGroups}}" wx:key="kind" wx:for-item="g">
+      <view class="ing-kind">{{g.kind}}</view>
+      <view class="ing-grid">
+        <view class="ing-cell" wx:for="{{g.items}}" wx:key="name" wx:for-item="it">
+          <text class="ing-n">{{it.name}}</text>
+          <text class="ing-a">{{it.amount}}</text>
+        </view>
+      </view>
+    </block>
+  </view>
+
+</view>
+
+<!-- 还没确认菜单 -->
+<view class="empty" wx:else>
+  <text class="empty-icon">🍳</text>
+  <view>还没有安排要做的菜</view>
+  <view class="muted" style="margin-top:16rpx">生成菜单后勾选要做的菜，<br/>再选个开始日期就能到这里</view>
+  <view class="ghost-btn" style="margin-top:32rpx" bindtap="goIndex">去配菜</view>
+</view>

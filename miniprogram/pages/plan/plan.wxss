@@ -1,0 +1,100 @@
+.plan-title { font-size: 36rpx; font-weight: 800; color: var(--primary-dark); margin-bottom: 8rpx; }
+
+.meta { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 16rpx; }
+.meta-chip {
+  padding: 4rpx 18rpx; font-size: 22rpx;
+  color: var(--ink-soft); background: var(--panel-sunk);
+  border: 1rpx solid var(--line); border-radius: 999rpx;
+}
+
+/* 选菜条 */
+.cook-bar {
+  padding: 22rpx 24rpx; margin-bottom: 24rpx;
+  background: var(--primary-soft);
+  border: 2rpx dashed var(--primary);
+  border-radius: 20rpx;
+}
+.cook-bar-text { display: flex; flex-direction: column; margin-bottom: 16rpx; }
+.cook-count { font-size: 28rpx; font-weight: 700; color: var(--primary-dark); }
+.cook-bar-actions { display: flex; gap: 16rpx; }
+.cook-bar-actions .ghost-btn { flex: 1; text-align: center; }
+
+/* 天数 */
+.day-tabs { white-space: nowrap; margin-bottom: 24rpx; }
+.day-tab {
+  display: inline-block; padding: 14rpx 34rpx; margin-right: 14rpx;
+  font-size: 26rpx; font-weight: 600; color: var(--ink-soft);
+  background: var(--panel); border: 2rpx solid var(--line); border-radius: 999rpx;
+}
+.day-tab.on {
+  color: #fff; border-color: transparent;
+  background: linear-gradient(120deg, var(--primary), var(--accent));
+}
+
+/* 餐次 */
+.meal-head { display: flex; align-items: center; gap: 16rpx; flex-wrap: wrap; }
+.staple { font-size: 25rpx; color: var(--amber); font-weight: 600; margin: 12rpx 0 16rpx; }
+.section-title { font-size: 30rpx; font-weight: 700; margin-bottom: 16rpx; }
+
+/* 菜品行 */
+.dish {
+  display: flex; align-items: center; gap: 16rpx;
+  padding: 20rpx 16rpx; margin-bottom: 12rpx;
+  background: #fffdfb; border: 2rpx solid var(--line); border-radius: 16rpx;
+}
+.dish.picked { border-color: var(--primary); background: var(--primary-soft); }
+.dish-check { padding: 6rpx; }
+.check-box {
+  display: block; width: 40rpx; height: 40rpx; line-height: 40rpx; text-align: center;
+  font-size: 26rpx; color: #fff;
+  border: 2rpx solid var(--line); border-radius: 8rpx; background: #fff;
+}
+.check-box.on { background: var(--primary); border-color: var(--primary); }
+.dish-main { flex: 1; min-width: 0; }
+.dish-name { display: flex; align-items: center; gap: 12rpx; }
+.dn { font-size: 30rpx; font-weight: 700; }
+.dish-fb { display: flex; gap: 8rpx; }
+.fb { padding: 8rpx 10rpx; font-size: 28rpx; }
+
+/* 采购清单：名字与用量上下排，避免长用量把名字挤成竖排 */
+.shop-group-name {
+  font-size: 22rpx; font-weight: 700; color: var(--muted);
+  letter-spacing: 2rpx; margin: 16rpx 0 10rpx;
+}
+.shop-grid { display: flex; flex-wrap: wrap; gap: 12rpx; }
+.shop-item {
+  display: flex; flex-direction: column; gap: 4rpx;
+  width: calc(50% - 6rpx); box-sizing: border-box;
+  padding: 16rpx 18rpx;
+  background: var(--panel-sunk); border: 1rpx solid var(--line); border-radius: 14rpx;
+}
+.shop-n { font-size: 26rpx; font-weight: 600; word-break: break-all; }
+.shop-a { font-size: 25rpx; font-weight: 700; color: var(--primary-dark); word-break: break-all; }
+
+.tip { font-size: 25rpx; color: var(--ink-soft); margin-bottom: 8rpx; }
+
+/* 日期选择弹层 */
+.mask {
+  position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: 100;
+  background: rgba(45, 30, 20, 0.5);
+  display: flex; align-items: flex-end;
+}
+.sheet {
+  width: 100%; box-sizing: border-box;
+  padding: 40rpx 32rpx calc(40rpx + env(safe-area-inset-bottom));
+  background: var(--panel);
+  border-radius: 32rpx 32rpx 0 0;
+}
+.sheet-title { font-size: 34rpx; font-weight: 800; margin-bottom: 8rpx; }
+.date-box {
+  margin-top: 24rpx; padding: 24rpx;
+  font-size: 32rpx; font-weight: 700; text-align: center;
+  background: #fffdfb; border: 2rpx solid var(--line); border-radius: 16rpx;
+}
+.quick-row { display: flex; gap: 16rpx; margin-top: 16rpx; }
+.quick-row .ghost-btn { flex: 1; text-align: center; }
+.date-preview {
+  margin: 24rpx 0; padding: 20rpx;
+  font-size: 24rpx; color: var(--muted); line-height: 1.6;
+  background: var(--panel-sunk); border-radius: 14rpx;
+}

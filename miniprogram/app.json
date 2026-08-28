@@ -1,0 +1,31 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/plan/plan",
+    "pages/cook/cook",
+    "pages/dish/dish",
+    "pages/me/me",
+    "pages/login/login"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#e85d3d",
+    "navigationBarTitleText": "AI 智能菜谱",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#fdf6ef"
+  },
+  "tabBar": {
+    "color": "#9a8b80",
+    "selectedColor": "#e85d3d",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "配菜" },
+      { "pagePath": "pages/cook/cook", "text": "做菜" },
+      { "pagePath": "pages/me/me", "text": "我的" }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

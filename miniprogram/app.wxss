@@ -1,0 +1,152 @@
+/* ===== 全局样式：网页版那套暖色调搬过来 ===== */
+page {
+  --bg: #fdf6ef;
+  --panel: #ffffff;
+  --panel-sunk: #faf6f1;
+  --ink: #2d2420;
+  --ink-soft: #5c4f46;
+  --muted: #9a8b80;
+  --line: #f0e4d8;
+  --primary: #e85d3d;
+  --primary-dark: #cf4a2c;
+  --primary-soft: #fdeee8;
+  --accent: #f2a03d;
+  --green: #4c9e6b;
+  --amber: #8a6d1a;
+  --amber-soft: #fff3cd;
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 28rpx;
+  line-height: 1.55;
+}
+
+.page { padding: 24rpx 24rpx 48rpx; }
+
+/* 卡片 */
+.card {
+  background: var(--panel);
+  border: 1rpx solid var(--line);
+  border-radius: 24rpx;
+  padding: 28rpx;
+  margin-bottom: 24rpx;
+}
+
+.muted { color: var(--muted); font-size: 24rpx; }
+.hidden { display: none; }
+
+/* 区块标题 */
+.field { margin-bottom: 32rpx; }
+.field-label {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 16rpx;
+}
+
+/* 按钮 */
+.primary-btn {
+  width: 100%;
+  padding: 26rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  letter-spacing: 2rpx;
+  color: #fff;
+  border: none;
+  border-radius: 20rpx;
+  background: linear-gradient(120deg, var(--primary), var(--accent));
+  box-shadow: 0 8rpx 24rpx rgba(232, 93, 61, 0.3);
+}
+.primary-btn[disabled] { opacity: 0.55; box-shadow: none; }
+
+.ghost-btn {
+  display: inline-block;
+  padding: 14rpx 26rpx;
+  font-size: 26rpx;
+  color: var(--ink);
+  background: var(--panel);
+  border: 2rpx solid var(--line);
+  border-radius: 16rpx;
+  line-height: 1.3;
+}
+.ghost-btn.on { border-color: var(--primary); color: var(--primary-dark); background: var(--primary-soft); }
+
+/* 可多选的小标签（口味） */
+.chips { display: flex; flex-wrap: wrap; gap: 16rpx; }
+.chip {
+  padding: 12rpx 28rpx;
+  font-size: 26rpx;
+  color: var(--ink-soft);
+  background: var(--panel);
+  border: 2rpx solid var(--line);
+  border-radius: 999rpx;
+}
+.chip.on {
+  color: #fff;
+  font-weight: 600;
+  border-color: transparent;
+  background: linear-gradient(120deg, var(--primary), #ef7d4e);
+}
+
+/* 三选一的大卡（用餐类型）/ 可多选的餐次 */
+.opt-row { display: flex; gap: 16rpx; }
+.opt {
+  flex: 1;
+  padding: 22rpx 8rpx 18rpx;
+  text-align: center;
+  background: var(--panel);
+  border: 2rpx solid var(--line);
+  border-radius: 20rpx;
+}
+.opt.on {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  box-shadow: inset 0 0 0 2rpx var(--primary);
+}
+.opt-emoji { display: block; font-size: 40rpx; line-height: 1.2; }
+.opt-name { display: block; font-size: 26rpx; font-weight: 600; margin-top: 4rpx; }
+.opt-desc { display: block; font-size: 20rpx; color: var(--muted); }
+.opt.on .opt-desc { color: var(--primary-dark); }
+
+/* 餐次标签 */
+.meal-tag {
+  display: inline-block;
+  padding: 6rpx 20rpx;
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #fff;
+  border-radius: 10rpx;
+  background: linear-gradient(120deg, var(--accent), var(--primary));
+}
+
+/* 菜品分类小标 */
+.cat {
+  display: inline-block;
+  padding: 2rpx 16rpx;
+  font-size: 20rpx;
+  font-weight: 600;
+  border-radius: 999rpx;
+  background: var(--panel-sunk);
+  color: var(--ink-soft);
+}
+
+/* 空状态 */
+.empty {
+  padding: 120rpx 40rpx;
+  text-align: center;
+  color: var(--muted);
+}
+.empty-icon { display: block; font-size: 96rpx; margin-bottom: 24rpx; }
+
+/* 顶部说明条 */
+.notice {
+  padding: 20rpx 24rpx;
+  margin-bottom: 24rpx;
+  font-size: 24rpx;
+  color: var(--amber);
+  background: var(--amber-soft);
+  border: 1rpx solid #f0dfa4;
+  border-radius: 16rpx;
+}

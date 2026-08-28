@@ -1,0 +1,89 @@
+<view class="page">
+
+  <view wx:if="{{needLogin}}" class="notice" bindtap="goLogin">
+    还没登录，点这里登录后才能生成菜谱 →
+  </view>
+  <view wx:elif="{{mockMode}}" class="notice">
+    演示模式：服务端未配置大模型 Key，用内置示例数据，功能可完整体验
+  </view>
+
+  <view class="card">
+    <!-- 人数 -->
+    <view class="field">
+      <text class="field-label">用餐人数</text>
+      <view class="stepper">
+        <view class="stepper-btn" data-delta="-1" bindtap="stepPeople">−</view>
+        <view class="stepper-num">{{people}} 人</view>
+        <view class="stepper-btn" data-delta="1" bindtap="stepPeople">+</view>
+      </view>
+    </view>
+
+    <!-- 天数 -->
+    <view class="field">
+      <text class="field-label">天数：{{days}} 天</text>
+      <slider min="1" max="7" step="1" value="{{days}}" show-value="{{false}}"
+              block-size="24" activeColor="#e85d3d" backgroundColor="#f0e4d8"
+              bindchange="onDays" />
+      <view class="range-marks"><text>1</text><text>7</text></view>
+    </view>
+
+    <!-- 用餐类型 -->
+    <view class="field">
+      <text class="field-label">用餐类型</text>
+      <view class="opt-row">
+        <view wx:for="{{mealTypes}}" wx:key="key"
+              class="opt {{mealType === item.key ? 'on' : ''}}"
+              data-key="{{item.key}}" bindtap="pickType">
+          <text class="opt-emoji">{{item.emoji}}</text>
+          <text class="opt-name">{{item.name}}</text>
+          <text class="opt-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 餐次：独立多选 -->
+    <view class="field">
+      <text class="field-label">每日餐次<text class="muted">（想做哪餐点哪餐）</text></text>
+      <view class="opt-row">
+        <view wx:for="{{slotList}}" wx:key="key"
+              class="opt {{item.on ? 'on' : ''}}"
+              data-key="{{item.key}}" bindtap="toggleMeal">
+          <text class="opt-emoji">{{item.emoji}}</text>
+          <text class="opt-name">{{item.name}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 口味 -->
+    <view class="field">
+      <text class="field-label">口味偏好（可多选）</text>
+      <view class="chips">
+        <view wx:for="{{tasteList}}" wx:key="name"
+              class="chip {{item.on ? 'on' : ''}}"
+              data-taste="{{item.name}}" bindtap="toggleTaste">{{item.name}}</view>
+      </view>
+    </view>
+
+    <!-- 其他要求 -->
+    <view class="field">
+      <text class="field-label">其他要求（选填）</text>
+      <textarea class="textarea" value="{{extra}}" bindinput="onExtra" maxlength="300"
+                placeholder="如：有老人小孩，不要太辣；想吃点海鲜…"
+                placeholder-class="ph" auto-height />
+    </view>
+
+    <!-- 记忆开关 -->
+    <view class="switch-row">
+      <view class="switch-text">
+        <text>结合我的记忆个性化推荐</text>
+        <text class="muted">关闭＝无痕生成，不写入历史</text>
+      </view>
+      <switch checked="{{useMemory}}" color="#e85d3d" bindchange="onMemory" />
+    </view>
+  </view>
+
+  <button class="primary-btn" loading="{{loading}}" disabled="{{loading || needLogin}}" bindtap="generate">
+    {{loading ? loadingText : '✨ 开始生成菜谱'}}
+  </button>
+
+</view>

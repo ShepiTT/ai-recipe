@@ -1,0 +1,109 @@
+<view class="page" wx:if="{{plan}}">
+
+  <!-- 标题 -->
+  <view class="card">
+    <view class="plan-title">{{plan.title}}</view>
+    <view class="muted" wx:if="{{plan.summary}}">{{plan.summary}}</view>
+    <view class="meta">
+      <text class="meta-chip" wx:if="{{plan.meta.people}}">👥 {{plan.meta.people}} 人</text>
+      <text class="meta-chip">📅 {{plan.days.length}} 天</text>
+      <text class="meta-chip" wx:if="{{plan.meta.mealTypeLabel}}">🍽 {{plan.meta.mealTypeLabel}}</text>
+      <text class="meta-chip" wx:if="{{plan.mock}}">🧪 演示数据</text>
+    </view>
+  </view>
+
+  <!-- 选菜条 -->
+  <view class="cook-bar">
+    <view class="cook-bar-text">
+      <text class="cook-count">{{pickCount ? '已选 ' + pickCount + ' 道' : '还没选菜'}}</text>
+      <text class="muted">勾选这次真正要做的菜，确认后才写入「最近做过」</text>
+    </view>
+    <view class="cook-bar-actions">
+      <view class="ghost-btn" bindtap="toggleWholeDay">{{allPickedToday ? '取消本天' : '全选本天'}}</view>
+      <view class="ghost-btn on" bindtap="openDatePicker">🍳 去做菜</view>
+    </view>
+  </view>
+
+  <!-- 天数切换 -->
+  <scroll-view class="day-tabs" scroll-x wx:if="{{dayTabs.length > 1}}">
+    <view wx:for="{{dayTabs}}" wx:key="*this"
+          class="day-tab {{dayIndex === index ? 'on' : ''}}"
+          data-i="{{index}}" bindtap="switchDay">{{item}}</view>
+  </scroll-view>
+
+  <!-- 餐次与菜品 -->
+  <view class="card" wx:for="{{meals}}" wx:key="type" wx:for-item="meal">
+    <view class="meal-head">
+      <text class="meal-tag">{{meal.type}}</text>
+      <text class="muted" wx:if="{{meal.theme}}">{{meal.theme}}</text>
+    </view>
+    <view class="staple" wx:if="{{meal.staple}}">🍚 主食：{{meal.staple}}</view>
+
+    <view wx:for="{{meal.dishes}}" wx:key="name" wx:for-item="dish"
+          class="dish {{dish.picked ? 'picked' : ''}}">
+      <view class="dish-check" data-name="{{dish.name}}" catchtap="togglePick">
+        <text class="check-box {{dish.picked ? 'on' : ''}}">{{dish.picked ? '✓' : ''}}</text>
+      </view>
+      <view class="dish-main" data-name="{{dish.name}}" bindtap="openDish">
+        <view class="dish-name">
+          <text class="cat">{{dish.category}}</text>
+          <text class="dn">{{dish.name}}</text>
+        </view>
+        <view class="muted" wx:if="{{dish.brief}}">{{dish.brief}}</view>
+      </view>
+      <view class="dish-fb">
+        <text class="fb" data-name="{{dish.name}}" data-act="like" catchtap="feedback">👍</text>
+        <text class="fb" data-name="{{dish.name}}" data-act="dislike" catchtap="feedback">👎</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 采购清单 -->
+  <view class="card" wx:if="{{shopGroups.length}}">
+    <view class="section-title">🛒 采购清单</view>
+    <view wx:for="{{shopGroups}}" wx:key="name" wx:for-item="g">
+      <view class="shop-group-name">{{g.name}}</view>
+      <view class="shop-grid">
+        <view class="shop-item" wx:for="{{g.items}}" wx:key="name" wx:for-item="it">
+          <text class="shop-n">{{it.name}}</text>
+          <text class="shop-a">{{it.amount}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 备餐建议 -->
+  <view class="card" wx:if="{{plan.tips.length}}">
+    <view class="section-title">💡 备餐建议</view>
+    <view class="tip" wx:for="{{plan.tips}}" wx:key="*this">· {{item}}</view>
+  </view>
+</view>
+
+<!-- 空状态 -->
+<view class="empty" wx:else>
+  <text class="empty-icon">🥘</text>
+  <view>还没有菜单</view>
+  <view class="muted" style="margin-top:16rpx">去「配菜」生成一份吧</view>
+  <view class="ghost-btn" style="margin-top:32rpx" bindtap="goIndex">去配菜</view>
+</view>
+
+<!-- 开始日期选择 -->
+<view class="mask" wx:if="{{datePicking}}" bindtap="closeDatePicker">
+  <view class="sheet" catchtap="stopTap">
+    <view class="sheet-title">🗓️ 从哪天开始做？</view>
+    <view class="muted">选中的菜会按「第 1 天 → 这个日期」依次排到每一天</view>
+
+    <picker mode="date" value="{{startDate}}" bindchange="onDateChange">
+      <view class="date-box">{{startDate}}</view>
+    </picker>
+
+    <view class="quick-row">
+      <view class="ghost-btn" data-offset="0" bindtap="quickDate">今天</view>
+      <view class="ghost-btn" data-offset="1" bindtap="quickDate">明天</view>
+      <view class="ghost-btn" data-offset="2" bindtap="quickDate">后天</view>
+    </view>
+
+    <view class="date-preview">{{datePreview}}</view>
+    <button class="primary-btn" bindtap="confirmCook">确认，开始做菜</button>
+  </view>
+</view>

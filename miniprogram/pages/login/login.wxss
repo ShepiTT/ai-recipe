@@ -1,0 +1,31 @@
+.logo { text-align: center; font-size: 100rpx; line-height: 1.2; margin-top: 40rpx; }
+.brand { text-align: center; font-size: 42rpx; font-weight: 800; margin-top: 12rpx; }
+.brand-sub { text-align: center; display: block; margin-bottom: 40rpx; }
+
+.divider { text-align: center; margin: 32rpx 0; }
+.divider text { padding: 0 20rpx; background: var(--panel); }
+
+.tabs {
+  display: flex; gap: 8rpx; padding: 8rpx; margin-bottom: 24rpx;
+  background: var(--panel-sunk); border-radius: 16rpx;
+}
+.tab {
+  flex: 1; padding: 18rpx; text-align: center;
+  font-size: 28rpx; font-weight: 600; color: var(--muted); border-radius: 12rpx;
+}
+.tab.on { color: var(--primary); background: var(--panel); }
+
+.input {
+  width: 100%; box-sizing: border-box; padding: 22rpx 20rpx;
+  font-size: 28rpx; background: #fffdfb;
+  border: 2rpx solid var(--line); border-radius: 16rpx;
+}
+.ph { color: #c4b5a8; }
+
+.err {
+  padding: 16rpx 20rpx; margin-bottom: 20rpx;
+  font-size: 25rpx; color: #d9534f;
+  background: #fdeaea; border-radius: 12rpx;
+}
+
+.tip { display: block; text-align: center; padding: 0 40rpx; line-height: 1.6; }

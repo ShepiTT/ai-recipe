@@ -1,0 +1,52 @@
+.stepper {
+  display: flex;
+  align-items: stretch;
+  border: 2rpx solid var(--line);
+  border-radius: 16rpx;
+  overflow: hidden;
+  background: #fffdfb;
+}
+.stepper-btn {
+  width: 100rpx;
+  line-height: 84rpx;
+  text-align: center;
+  font-size: 40rpx;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+.stepper-num {
+  flex: 1;
+  line-height: 84rpx;
+  text-align: center;
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.range-marks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 22rpx;
+  color: var(--muted);
+  margin-top: -8rpx;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 120rpx;
+  padding: 20rpx;
+  box-sizing: border-box;
+  font-size: 27rpx;
+  background: #fffdfb;
+  border: 2rpx solid var(--line);
+  border-radius: 16rpx;
+}
+.ph { color: #c4b5a8; }
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+.switch-text { display: flex; flex-direction: column; font-size: 27rpx; }

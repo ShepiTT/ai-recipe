@@ -1,0 +1,65 @@
+.date-card { text-align: center; }
+.date-nav { display: flex; align-items: center; gap: 16rpx; }
+.nav-btn {
+  width: 72rpx; height: 72rpx; line-height: 66rpx; text-align: center;
+  font-size: 44rpx; font-weight: 700; color: var(--ink);
+  border: 2rpx solid var(--line); border-radius: 16rpx; background: var(--panel);
+}
+.nav-btn.off { opacity: 0.3; }
+.date-mid { flex: 1; min-width: 0; }
+.date-text {
+  font-size: 34rpx; font-weight: 800; color: var(--primary-dark);
+  letter-spacing: 1rpx;
+}
+.date-actions { display: flex; gap: 16rpx; justify-content: center; margin-top: 20rpx; }
+
+/* 进度 */
+.progress-row { display: flex; align-items: center; gap: 16rpx; margin-bottom: 24rpx; padding: 0 8rpx; }
+.progress-bar {
+  flex: 1; height: 14rpx; border-radius: 999rpx; overflow: hidden;
+  background: var(--panel-sunk); border: 1rpx solid var(--line);
+}
+.progress-fill {
+  height: 100%; border-radius: 999rpx;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  transition: width 0.25s ease;
+}
+
+.meal-head { display: flex; align-items: center; gap: 16rpx; flex-wrap: wrap; margin-bottom: 16rpx; }
+.staple { font-size: 25rpx; color: var(--amber); font-weight: 600; }
+.section-title { font-size: 30rpx; font-weight: 700; }
+
+/* 菜品行 */
+.cook-dish {
+  display: flex; align-items: center; gap: 16rpx;
+  padding: 22rpx 16rpx; margin-bottom: 12rpx;
+  background: #fffdfb; border: 2rpx solid var(--line); border-radius: 16rpx;
+}
+.cook-dish.done { opacity: 0.5; background: var(--panel-sunk); }
+.cook-dish.done .cook-name { text-decoration: line-through; }
+.cook-check { padding: 6rpx; }
+.check-box {
+  display: block; width: 44rpx; height: 44rpx; line-height: 44rpx; text-align: center;
+  font-size: 28rpx; color: #fff;
+  border: 2rpx solid var(--line); border-radius: 10rpx; background: #fff;
+}
+.check-box.on { background: var(--primary); border-color: var(--primary); }
+.cook-main { flex: 1; min-width: 0; }
+.cook-name { font-size: 32rpx; font-weight: 700; }
+.arrow { color: var(--muted); font-size: 40rpx; }
+
+/* 今日食材：名字一行、用量一行，长文本也不会互相挤压 */
+.ing-head { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin-bottom: 16rpx; }
+.ing-kind {
+  font-size: 22rpx; font-weight: 700; color: var(--muted);
+  letter-spacing: 2rpx; margin: 20rpx 0 10rpx;
+}
+.ing-grid { display: flex; flex-wrap: wrap; gap: 12rpx; }
+.ing-cell {
+  display: flex; flex-direction: column; gap: 4rpx;
+  width: calc(50% - 6rpx); box-sizing: border-box;
+  padding: 16rpx 18rpx;
+  background: var(--panel-sunk); border: 1rpx solid var(--line); border-radius: 14rpx;
+}
+.ing-n { font-size: 26rpx; font-weight: 600; word-break: break-all; }
+.ing-a { font-size: 25rpx; font-weight: 700; color: var(--primary-dark); word-break: break-all; }

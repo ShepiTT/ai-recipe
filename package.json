@@ -1,0 +1,29 @@
+{
+  "name": "ai-recipe",
+  "version": "1.1.0",
+  "private": true,
+  "description": "AI 智能定制菜谱：按人数、口味、宴席/家宴/简餐类型生成 1-7 天菜谱，带个人记忆推荐、采购清单与历史回看",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node scripts/test.js"
+  },
+  "keywords": [
+    "ai",
+    "recipe",
+    "menu",
+    "deepseek",
+    "qwen",
+    "llm",
+    "express"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}

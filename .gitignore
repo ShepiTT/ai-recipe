@@ -1,0 +1,19 @@
+# 依赖
+node_modules/
+
+# 环境变量与密钥（.env.example 是模板，需要提交）
+.env
+.env.local
+
+# 本地数据：账号、口味记忆、生成历史、API Key
+src/data/db.json
+src/data/*.tmp
+src/data/*.bak
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+*.log
+
+# 微信开发者工具的本机设置（每台机器不同，不该提交）
+project.private.config.json

@@ -1,0 +1,47 @@
+.user-card { display: flex; align-items: center; gap: 20rpx; }
+.avatar {
+  width: 88rpx; height: 88rpx; line-height: 88rpx; text-align: center;
+  font-size: 40rpx; font-weight: 700; color: #fff; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+}
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: 34rpx; font-weight: 700; }
+
+.row-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16rpx; margin-bottom: 12rpx;
+}
+.section-title { font-size: 30rpx; font-weight: 700; }
+
+.input {
+  width: 100%; box-sizing: border-box; padding: 20rpx;
+  font-size: 27rpx; background: #fffdfb;
+  border: 2rpx solid var(--line); border-radius: 16rpx;
+}
+.ph { color: #c4b5a8; }
+
+/* 记忆条目：标签固定宽度，内容自己换行 */
+.tag-row {
+  display: flex; gap: 16rpx; align-items: flex-start;
+  padding: 16rpx 0; border-bottom: 1rpx dashed var(--line);
+  font-size: 26rpx;
+}
+.tag-row:last-child { border-bottom: none; }
+.tag-label { flex: 0 0 150rpx; font-weight: 600; color: var(--ink-soft); }
+.tag-row text:last-child { flex: 1; word-break: break-all; }
+
+/* 历史 */
+.hist {
+  display: flex; align-items: center; gap: 16rpx;
+  padding: 20rpx 0; border-bottom: 1rpx dashed var(--line);
+}
+.hist:last-child { border-bottom: none; }
+.hist-main { flex: 1; min-width: 0; }
+.hist-title {
+  font-size: 28rpx; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.hist-del {
+  flex: 0 0 auto; padding: 8rpx 20rpx;
+  font-size: 36rpx; color: var(--muted);
+}

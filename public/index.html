@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="基于国产大模型的智能定制菜谱：按人数、口味、宴席/家宴/简餐生成 1-7 天菜单与采购清单。" />
+<meta name="theme-color" content="#e85d3d" />
+<title>AI 智能菜谱 · 定制你的餐桌</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8D%B3%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="/style.css?v=__ASSET_V__" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">🍳 AI 智能菜谱</div>
+  <button id="navToggle" class="icon-btn nav-toggle" aria-label="展开菜单" aria-expanded="false">☰</button>
+  <div class="topbar-right" id="topbarRight">
+    <span id="mockBadge" class="mock-badge hidden" title="未配置任何 API Key，正在使用内置演示数据">演示模式</span>
+    <select id="providerSelect" aria-label="选择模型服务商" title="选择模型服务商"></select>
+    <select id="modelSelect" aria-label="选择模型" title="选择模型"></select>
+    <button id="cookModeBtn" class="ghost-btn hidden" title="进入做菜界面">🍳 去做菜</button>
+    <button id="themeBtn" class="icon-btn" title="切换深色 / 浅色" aria-label="切换主题">🌙</button>
+    <button id="keysBtn" class="ghost-btn" title="配置我的大模型 API Key">🔑 我的密钥</button>
+    <button id="memoryBtn" class="ghost-btn" title="查看与编辑口味记忆">🧠 我的记忆</button>
+    <span id="userChip" class="user-chip hidden">
+      <span class="avatar" aria-hidden="true"></span><span class="uname"></span>
+      <button id="logoutBtn" class="logout-btn" title="退出登录">退出</button>
+    </span>
+  </div>
+</header>
+
+<main class="layout">
+  <!-- 左侧：定制表单 -->
+  <aside class="panel form-panel">
+    <div class="mode-tabs" role="tablist">
+      <button type="button" class="mode-tab active" data-mode="plan" role="tab">📋 配菜单</button>
+      <button type="button" class="mode-tab" data-mode="pantry" role="tab">🥬 按食材</button>
+    </div>
+
+    <!-- 模式 A：从需求出发排菜单 -->
+    <div id="planForm">
+    <div class="field-row">
+      <div class="field">
+        <label for="peopleInput">用餐人数</label>
+        <div class="stepper">
+          <button type="button" id="peopleMinus" aria-label="减少人数">−</button>
+          <input type="number" id="peopleInput" min="1" max="30" value="4" aria-label="用餐人数" />
+          <button type="button" id="peoplePlus" aria-label="增加人数">+</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="daysRange">天数：<b id="daysLabel">3</b> 天</label>
+        <input type="range" id="daysRange" min="1" max="7" step="1" value="3" />
+        <div class="range-marks"><span>1</span><span>7</span></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>用餐类型</label>
+      <div class="type-cards" role="radiogroup" aria-label="用餐类型">
+        <button type="button" class="type-card active" data-type="family" role="radio" aria-checked="true"><span>🏠</span><b>家宴</b><i>丰盛家常 温馨聚餐</i></button>
+        <button type="button" class="type-card" data-type="banquet" role="radio" aria-checked="false"><span>🎉</span><b>宴席</b><i>正式宴请 讲究排场</i></button>
+        <button type="button" class="type-card" data-type="simple" role="radio" aria-checked="false"><span>🥢</span><b>简餐</b><i>快手省时 营养简单</i></button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>每日餐次<small class="muted">（想做哪餐点哪餐）</small></label>
+      <div class="meal-slots" id="mealSlots" role="group" aria-label="每日餐次">
+        <button type="button" class="slot-btn" data-slot="breakfast" aria-pressed="false"><span>🌅</span><b>早餐</b></button>
+        <button type="button" class="slot-btn on" data-slot="lunch" aria-pressed="true"><span>☀️</span><b>午餐</b></button>
+        <button type="button" class="slot-btn on" data-slot="dinner" aria-pressed="true"><span>🌙</span><b>晚餐</b></button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>口味偏好（可多选）</label>
+      <div class="chips" id="tasteChips"></div>
+    </div>
+
+    <div class="field">
+      <label for="extraInput">其他要求（选填）</label>
+      <textarea id="extraInput" rows="2" maxlength="300" placeholder="如：有老人小孩，不要太辣；想吃点海鲜…"></textarea>
+    </div>
+
+    <label class="switch-row">
+      <input type="checkbox" id="useMemory" checked />
+      <span>结合我的记忆个性化推荐</span>
+      <small class="muted" title="关闭后本次生成不写入历史与「最近做过」">（关闭＝无痕生成）</small>
+    </label>
+
+    <label class="switch-row hidden" id="thinkingRow">
+      <input type="checkbox" id="deepThinking" />
+      <span>开启深度思考</span>
+      <small class="muted" title="让模型先推理再作答，菜品搭配更讲究，但耗时与费用明显增加">（更讲究，但更慢更贵）</small>
+    </label>
+
+    <button id="generateBtn" class="primary-btn">✨ 开始生成菜谱</button>
+    <p class="kbd-hint muted">快捷键：Ctrl / ⌘ + Enter</p>
+    </div><!-- /planForm -->
+
+    <!-- 模式 B：从库存出发，我有什么能做什么 -->
+    <div id="pantryForm" class="hidden">
+      <div class="field">
+        <label for="ingInput">我现在有这些食材</label>
+        <div class="ing-input-row">
+          <input type="text" id="ingInput" placeholder="输入后回车添加，如：白菜" maxlength="20" />
+          <button type="button" id="ingAddBtn" class="ghost-btn">添加</button>
+        </div>
+        <div class="ing-tags" id="ingTags"></div>
+        <p class="muted" style="font-size:12.5px;margin-top:6px">
+          盐、油、酱油、葱姜蒜这些基础调料默认当你有，不用填。
+        </p>
+      </div>
+
+      <div class="field">
+        <label>常见食材，点一下就加</label>
+        <div class="chips" id="ingQuick"></div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="pantryPeople">用餐人数</label>
+          <div class="stepper">
+            <button type="button" id="pantryPeopleMinus" aria-label="减少人数">−</button>
+            <input type="number" id="pantryPeople" min="1" max="30" value="2" aria-label="用餐人数" />
+            <button type="button" id="pantryPeoplePlus" aria-label="增加人数">+</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="pantryExtra">其他要求</label>
+          <input type="text" id="pantryExtra" maxlength="100" placeholder="如：快手、不要油炸" />
+        </div>
+      </div>
+
+      <label class="switch-row">
+        <input type="checkbox" id="strictMode" />
+        <span>只用现有食材</span>
+        <small class="muted" title="勾上后只推荐不用再买东西就能做的菜，可选范围会变窄">（一样都不用再买）</small>
+      </label>
+
+      <button id="findBtn" class="primary-btn">🔍 看看能做什么菜</button>
+      <p class="kbd-hint muted">快捷键：Ctrl / ⌘ + Enter</p>
+    </div>
+  </aside>
+
+  <!-- 右侧：结果 -->
+  <section class="panel result-panel">
+    <div id="emptyState" class="empty-state">
+      <div class="empty-icon">🥘</div>
+      <p>设置好人数、口味与类型，<br/>点击「开始生成」让 AI 大厨为你配一桌好菜</p>
+    </div>
+
+    <div id="resultWrap" class="hidden">
+      <div class="result-head">
+        <div class="result-title">
+          <h2 id="planTitle"></h2>
+          <p id="planSummary" class="muted"></p>
+          <div id="planMeta" class="plan-meta"></div>
+        </div>
+        <div class="result-actions">
+          <button id="regenBtn" class="ghost-btn" title="用相同条件再生成一份">🔁 换一批</button>
+          <button id="copyBtn" class="ghost-btn" title="复制为纯文本">📋 复制</button>
+          <button id="exportBtn" class="ghost-btn" title="导出 Markdown 文件">⬇️ 导出</button>
+          <button id="printBtn" class="ghost-btn" title="打印或另存为 PDF">🖨️ 打印</button>
+        </div>
+      </div>
+
+      <div id="cookBar" class="cook-bar hidden">
+        <div class="cook-bar-text">
+          <b id="cookCount">已选 0 道</b>
+          <small class="muted">勾选你这次真正要做的菜，确认后才写入「最近做过」</small>
+        </div>
+        <button id="cookAllBtn" class="link-btn">全选本天</button>
+        <button id="cookConfirmBtn" class="ghost-btn">🍳 确认，去做菜</button>
+      </div>
+
+      <div id="planTips" class="plan-tips hidden"></div>
+      <div class="day-tabs" id="dayTabs" role="tablist"></div>
+      <div id="mealList"></div>
+      <div id="printArea" class="print-only"></div>
+
+      <div class="shopping-box">
+        <div class="shopping-head">
+          <h3>🛒 采购清单</h3>
+          <span id="shopProgress" class="shop-progress"></span>
+          <button id="shopResetBtn" class="link-btn">重置勾选</button>
+        </div>
+        <div id="shoppingList"></div>
+      </div>
+    </div>
+    <!-- 按食材找菜的结果 -->
+    <div id="pantryWrap" class="hidden">
+      <div class="result-head">
+        <div class="result-title">
+          <h2 id="pantryTitle"></h2>
+          <p id="pantrySummary" class="muted"></p>
+          <div id="pantryMeta" class="plan-meta"></div>
+        </div>
+      </div>
+
+      <div id="pantryUnused" class="notice-line hidden"></div>
+      <div id="pantryTips" class="plan-tips hidden"></div>
+      <div id="pantryList" class="pantry-list"></div>
+    </div>
+  </section>
+</main>
+
+<!-- 做菜界面 -->
+<main class="cook-view hidden" id="cookView">
+  <div class="panel cook-panel">
+    <div class="cook-head">
+      <button id="cookBackBtn" class="ghost-btn">← 回菜单</button>
+      <div class="cook-date-nav">
+        <button id="cookPrevDay" class="icon-btn" aria-label="前一天">‹</button>
+        <div class="cook-date">
+          <b id="cookDateText"></b>
+          <small id="cookDayText" class="muted"></small>
+        </div>
+        <button id="cookNextDay" class="icon-btn" aria-label="后一天">›</button>
+      </div>
+      <button id="cookTodayBtn" class="ghost-btn">回到今天</button>
+    </div>
+
+    <div class="cook-progress">
+      <div class="cook-progress-bar"><i id="cookProgressFill"></i></div>
+      <span id="cookProgressText" class="muted"></span>
+    </div>
+
+    <div id="cookDishes"></div>
+
+    <div class="cook-ing">
+      <div class="cook-ing-head">
+        <h3>🥬 今日食材汇总</h3>
+        <button id="cookIngBtn" class="ghost-btn">汇总今日食材</button>
+      </div>
+      <div id="cookIngBody" class="muted">把今天这几道菜的食材合并列出，做之前一次备齐。</div>
+    </div>
+  </div>
+</main>
+
+<!-- 开始日期选择 -->
+<div id="startDateModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="startDateTitle">
+  <div class="modal-card">
+    <button class="modal-close" id="startDateClose" aria-label="关闭">×</button>
+    <h2 id="startDateTitle" style="margin-top:0">🗓️ 从哪天开始做？</h2>
+    <p class="muted">选中的菜会按「第 1 天 → 这个日期」依次排到每一天。</p>
+    <div class="field">
+      <label for="startDateInput">第 1 天的日期</label>
+      <input type="date" id="startDateInput" />
+    </div>
+    <div class="quick-dates">
+      <button type="button" class="ghost-btn" data-offset="0">今天</button>
+      <button type="button" class="ghost-btn" data-offset="1">明天</button>
+      <button type="button" class="ghost-btn" data-offset="2">后天</button>
+    </div>
+    <p id="startDatePreview" class="date-preview muted"></p>
+    <button id="startDateConfirm" class="primary-btn">确认，开始做菜</button>
+  </div>
+</div>
+
+<!-- 菜品详情弹窗 -->
+<div id="detailModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="detailTitleRef">
+  <div class="modal-card">
+    <button class="modal-close" id="detailClose" aria-label="关闭">×</button>
+    <div id="detailBody"></div>
+  </div>
+</div>
+
+<!-- 记忆面板弹窗 -->
+<div id="memoryModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="memoryTitle">
+  <div class="modal-card wide">
+    <button class="modal-close" id="memoryClose" aria-label="关闭">×</button>
+    <h2 id="memoryTitle" style="margin-top:0">🧠 我的口味记忆</h2>
+    <p class="muted">AI 会根据这些信息为你做个性化推荐；给菜品点 👍/👎 也会自动更新。</p>
+    <div class="mem-grid">
+      <div class="field"><label for="memNickname">昵称</label><input id="memNickname" maxlength="24" /></div>
+      <div class="field"><label for="memHousehold">常用人数</label><input id="memHousehold" type="number" min="1" max="30" /></div>
+      <div class="field"><label for="memTastePrefs">喜欢的口味（顿号分隔）</label><input id="memTastePrefs" placeholder="麻辣、清淡…" /></div>
+      <div class="field"><label for="memDislikedTastes">不喜欢的口味</label><input id="memDislikedTastes" placeholder="偏甜、苦味…" /></div>
+      <div class="field"><label for="memAllergies">忌口 / 过敏食材</label><input id="memAllergies" placeholder="香菜、花生、海鲜…" /></div>
+    </div>
+    <div class="mem-tags" id="memTags"></div>
+
+    <div class="field">
+      <div class="hist-head">
+        <label>最近生成记录<small class="muted">（点击可回看）</small></label>
+        <button id="histClearBtn" class="link-btn danger">清空</button>
+      </div>
+      <ul id="memHistory" class="history-list"></ul>
+    </div>
+
+    <details class="account-box">
+      <summary>🔒 修改登录密码</summary>
+      <div class="mem-grid" style="margin-top:10px">
+        <div class="field"><label for="pwOld">当前密码</label><input id="pwOld" type="password" autocomplete="current-password" /></div>
+        <div class="field"><label for="pwNew">新密码（至少 4 位）</label><input id="pwNew" type="password" autocomplete="new-password" /></div>
+      </div>
+      <p class="muted" style="font-size:12.5px">修改后所有设备需重新登录。</p>
+      <button id="pwSaveBtn" class="ghost-btn">更新密码</button>
+    </details>
+
+    <button id="memSaveBtn" class="primary-btn">保存记忆</button>
+  </div>
+</div>
+
+<!-- 登录 / 注册 -->
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">🍳</div>
+    <h1>AI 智能菜谱</h1>
+    <p class="muted">登录后可保存口味记忆、配置自己的大模型 Key</p>
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab active" data-mode="login">登 录</button>
+      <button type="button" class="auth-tab" data-mode="register">注 册</button>
+    </div>
+    <form id="authForm" onsubmit="return false">
+      <div class="field">
+        <label for="authUsername">用户名</label>
+        <input id="authUsername" autocomplete="username" placeholder="2-24 位中文/字母/数字/下划线" />
+      </div>
+      <div class="field">
+        <label for="authPassword">密码</label>
+        <input id="authPassword" type="password" autocomplete="current-password" placeholder="至少 4 位" />
+      </div>
+      <p id="authError" class="auth-error hidden" role="alert"></p>
+      <button id="authSubmit" class="primary-btn" type="submit">登 录</button>
+    </form>
+  </div>
+</div>
+
+<!-- 密钥管理弹窗 -->
+<div id="keysModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="keysTitle">
+  <div class="modal-card wide">
+    <button class="modal-close" id="keysClose" aria-label="关闭">×</button>
+    <h2 id="keysTitle" style="margin-top:0">🔑 我的大模型密钥</h2>
+    <p class="muted">填入你自己的 API Key，生成时将优先使用。Key 只保存在本机服务端，不会上传到其他地方。</p>
+
+    <div class="key-block">
+      <div class="key-head">
+        <b>DeepSeek</b><span class="muted">platform.deepseek.com</span>
+        <span id="deepseekState" class="key-state"></span>
+      </div>
+      <div class="key-input-row">
+        <input id="deepseekKeyInput" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false" />
+        <button type="button" class="ghost-btn toggle-vis" data-target="deepseekKeyInput" aria-label="显示/隐藏">👁</button>
+        <button type="button" class="ghost-btn clear-key" data-provider="deepseek" title="清除已保存的 Key">清除</button>
+      </div>
+    </div>
+
+    <div class="key-block">
+      <div class="key-head">
+        <b>通义千问 Qwen</b><span class="muted">阿里云百炼 bailian.console.aliyun.com</span>
+        <span id="qwenState" class="key-state"></span>
+      </div>
+      <div class="key-input-row">
+        <input id="qwenKeyInput" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false" />
+        <button type="button" class="ghost-btn toggle-vis" data-target="qwenKeyInput" aria-label="显示/隐藏">👁</button>
+        <button type="button" class="ghost-btn clear-key" data-provider="qwen" title="清除已保存的 Key">清除</button>
+      </div>
+    </div>
+
+    <p class="muted" style="font-size:12.5px;margin-top:10px">未配置 Key 且服务端开启演示模式时，将使用内置演示数据。</p>
+    <button id="keysSaveBtn" class="primary-btn">保存密钥</button>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+<div id="loading" class="loading-mask hidden">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <p id="loadingText">大厨正在为你配菜…</p>
+    <p id="loadingSub" class="muted"></p>
+  </div>
+</div>
+
+<script src="/app.js?v=__ASSET_V__"></script>
+</body>
+</html>

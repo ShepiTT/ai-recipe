@@ -1,0 +1,84 @@
+<view class="page">
+
+  <!-- 未登录 -->
+  <view class="empty" wx:if="{{!user}}">
+    <text class="empty-icon">👤</text>
+    <view>还没登录</view>
+    <view class="ghost-btn" style="margin-top:32rpx" bindtap="goLogin">去登录</view>
+  </view>
+
+  <block wx:else>
+    <!-- 用户 -->
+    <view class="card user-card">
+      <view class="avatar">{{initial}}</view>
+      <view class="user-info">
+        <view class="user-name">{{user.displayName}}</view>
+        <view class="muted">{{user.username}}</view>
+      </view>
+      <view class="ghost-btn" bindtap="signOut">退出</view>
+    </view>
+
+    <!-- 口味记忆 -->
+    <view class="card">
+      <view class="row-head">
+        <text class="section-title">🧠 我的口味记忆</text>
+        <view class="ghost-btn" bindtap="toggleEdit">{{editing ? '取消' : '编辑'}}</view>
+      </view>
+      <view class="muted">AI 会根据这些做个性化推荐；给菜品点 👍/👎 也会自动更新。</view>
+
+      <block wx:if="{{editing}}">
+        <view class="field" style="margin-top:24rpx">
+          <text class="field-label">昵称</text>
+          <input class="input" value="{{form.nickname}}" data-k="nickname" bindinput="onField" maxlength="24" />
+        </view>
+        <view class="field">
+          <text class="field-label">常用人数</text>
+          <input class="input" type="number" value="{{form.householdSize}}" data-k="householdSize" bindinput="onField" />
+        </view>
+        <view class="field">
+          <text class="field-label">喜欢的口味（顿号分隔）</text>
+          <input class="input" value="{{form.tastePrefs}}" data-k="tastePrefs" bindinput="onField" placeholder="麻辣、清淡…" placeholder-class="ph" />
+        </view>
+        <view class="field">
+          <text class="field-label">不喜欢的口味</text>
+          <input class="input" value="{{form.dislikedTastes}}" data-k="dislikedTastes" bindinput="onField" placeholder="偏甜、苦味…" placeholder-class="ph" />
+        </view>
+        <view class="field">
+          <text class="field-label">忌口 / 过敏食材</text>
+          <input class="input" value="{{form.allergies}}" data-k="allergies" bindinput="onField" placeholder="香菜、花生、海鲜…" placeholder-class="ph" />
+        </view>
+        <button class="primary-btn" bindtap="saveMemory">保存记忆</button>
+      </block>
+
+      <block wx:else>
+        <view class="tag-row"><text class="tag-label">昵称</text><text>{{summary.nickname}}</text></view>
+        <view class="tag-row"><text class="tag-label">常用人数</text><text>{{summary.household}}</text></view>
+        <view class="tag-row"><text class="tag-label">喜欢口味</text><text>{{summary.tastePrefs}}</text></view>
+        <view class="tag-row"><text class="tag-label">忌口过敏</text><text>{{summary.allergies}}</text></view>
+        <view class="tag-row"><text class="tag-label">👍 喜欢</text><text>{{summary.liked}}</text></view>
+        <view class="tag-row"><text class="tag-label">🕐 最近做过</text><text>{{summary.recent}}</text></view>
+      </block>
+    </view>
+
+    <!-- 历史 -->
+    <view class="card">
+      <view class="row-head">
+        <text class="section-title">🕐 生成记录</text>
+        <view class="ghost-btn" wx:if="{{history.length}}" bindtap="clearHistory">清空</view>
+      </view>
+
+      <view class="muted" wx:if="{{!history.length}}">还没有生成记录，去配一份菜谱吧～</view>
+
+      <view class="hist" wx:for="{{history}}" wx:key="id">
+        <view class="hist-main" data-id="{{item.id}}" data-hasplan="{{item.hasPlan}}" bindtap="openHistory">
+          <view class="hist-title">{{item.title}}</view>
+          <view class="muted">
+            {{item.people}} 人 × {{item.days}} 天{{item.mealType ? ' · ' + item.mealType : ''}} · {{item.dateText}}
+          </view>
+        </view>
+        <text class="hist-del" data-id="{{item.id}}" catchtap="removeHistory">×</text>
+      </view>
+    </view>
+  </block>
+
+</view>
