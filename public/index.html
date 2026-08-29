@@ -34,6 +34,7 @@
     <div class="mode-tabs" role="tablist">
       <button type="button" class="mode-tab active" data-mode="plan" role="tab">📋 配菜单</button>
       <button type="button" class="mode-tab" data-mode="pantry" role="tab">🥬 按食材</button>
+      <button type="button" class="mode-tab" data-mode="dish" role="tab">🔍 指定菜</button>
     </div>
 
     <!-- 模式 A：从需求出发排菜单 -->
@@ -159,6 +160,40 @@
 
       <button id="planFromPantryBtn" class="primary-btn alt">📅 用这些食材排 <b id="planDaysEcho">2</b> 天</button>
       <p class="kbd-hint muted">排出来的菜单能直接勾选、进「去做菜」</p>
+    </div>
+
+    <!-- 模式 C：直接指定一道菜 -->
+    <div id="dishForm" class="hidden">
+      <div class="field">
+        <label for="dishNameInput">想做哪道菜</label>
+        <input type="text" id="dishNameInput" maxlength="30" placeholder="输入菜名，如：红烧肉" />
+        <p class="muted" style="font-size:12.5px;margin-top:6px">
+          用量会按下面的人数换算，也会避开你记忆里的忌口。
+        </p>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="dishPeople">用餐人数</label>
+          <div class="stepper">
+            <button type="button" id="dishPeopleMinus" aria-label="减少人数">−</button>
+            <input type="number" id="dishPeople" min="1" max="30" value="2" aria-label="用餐人数" />
+            <button type="button" id="dishPeoplePlus" aria-label="增加人数">+</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="dishExtra">口味要求</label>
+          <input type="text" id="dishExtra" maxlength="60" placeholder="如：少油、辣一点" />
+        </div>
+      </div>
+
+      <button id="cookThisBtn" class="primary-btn">👨‍🍳 就做这道</button>
+      <p class="kbd-hint muted">快捷键：Ctrl / ⌘ + Enter</p>
+
+      <div class="field" id="recentDishBox">
+        <label>最近查过<small class="muted">（点一下直接看）</small></label>
+        <div class="chips" id="recentDishChips"></div>
+      </div>
     </div>
   </aside>
 

@@ -532,12 +532,15 @@ function initForm() {
   });
 
   initPantry();
+  initDishMode();
 
   // 快捷键
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeAllModals();
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && state.user && !state.loading) {
-      if (state.mode === 'pantry') findByIngredients(); else generate();
+      if (state.mode === 'pantry') findByIngredients();
+      else if (state.mode === 'dish') cookThisDish();
+      else generate();
     }
   });
 }
@@ -1959,16 +1962,22 @@ function switchMode(mode) {
   document.querySelectorAll('.mode-tab').forEach((t) => t.classList.toggle('active', t.dataset.mode === mode));
   $('planForm').classList.toggle('hidden', mode !== 'plan');
   $('pantryForm').classList.toggle('hidden', mode !== 'pantry');
+  $('dishForm').classList.toggle('hidden', mode !== 'dish');
+  if (mode === 'dish') renderRecentDishes();
 
   // 两种模式的结果互斥显示，各自保留上次的内容
   const hasPlan = Boolean(state.plan);
   const hasPantry = Boolean(state.pantry);
   $('resultWrap').classList.toggle('hidden', mode !== 'plan' || !hasPlan);
   $('pantryWrap').classList.toggle('hidden', mode !== 'pantry' || !hasPantry);
-  $('emptyState').classList.toggle('hidden', mode === 'plan' ? hasPlan : hasPantry);
-  $('emptyState').querySelector('p').innerHTML = mode === 'pantry'
-    ? '把冰箱里有的食材加进去，<br/>看看今天能做出什么菜'
-    : '设置好人数、口味与类型，<br/>点击「开始生成」让 AI 大厨为你配一桌好菜';
+  // 指定菜的结果直接走详情弹窗，右侧始终是空状态
+  const showEmpty = mode === 'plan' ? !hasPlan : mode === 'pantry' ? !hasPantry : true;
+  $('emptyState').classList.toggle('hidden', !showEmpty);
+  $('emptyState').querySelector('p').innerHTML = {
+    pantry: '把冰箱里有的食材加进去，<br/>看看今天能做出什么菜',
+    dish: '输入菜名，直接拿到这道菜的<br/>食材用量与分步做法',
+    plan: '设置好人数、口味与类型，<br/>点击「开始生成」让 AI 大厨为你配一桌好菜',
+  }[mode];
   writeJSON(PREFS_KEY, { ...readJSON(PREFS_KEY, {}), mode });
 }
 
@@ -2239,6 +2248,106 @@ function pantryCard(d) {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
   });
   return el;
+}
+
+/* ==================== 指定菜：输入菜名直接做 ==================== */
+
+const RECENT_DISH_KEY = () => `ai_recipe_recent_dish_${state.user?.username || 'anon'}`;
+const RECENT_DISH_LIMIT = 12;
+
+function initDishMode() {
+  const clamp = () => {
+    const el = $('dishPeople');
+    el.value = Math.min(Math.max(parseInt(el.value) || 1, 1), 30);
+  };
+  $('dishPeopleMinus').addEventListener('click', () => { $('dishPeople').stepDown(); clamp(); });
+  $('dishPeoplePlus').addEventListener('click', () => { $('dishPeople').stepUp(); clamp(); });
+  $('dishPeople').addEventListener('change', clamp);
+
+  $('cookThisBtn').addEventListener('click', () => cookThisDish());
+  $('dishNameInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); cookThisDish(); }
+  });
+}
+
+/** 查过的菜名记在本地，下次点一下就能再看，省得重打 */
+function rememberDish(name) {
+  const list = [name, ...readJSON(RECENT_DISH_KEY(), []).filter((x) => x !== name)]
+    .slice(0, RECENT_DISH_LIMIT);
+  writeJSON(RECENT_DISH_KEY(), list);
+  renderRecentDishes();
+}
+
+function renderRecentDishes() {
+  const box = $('recentDishChips');
+  if (!box) return;
+  const list = readJSON(RECENT_DISH_KEY(), []);
+  $('recentDishBox').classList.toggle('hidden', !list.length);
+  box.innerHTML = '';
+  for (const name of list) {
+    const chip = document.createElement('span');
+    chip.className = 'recent-dish';
+    const tv = document.createElement('button');
+    tv.className = 'recent-dish-name';
+    tv.textContent = name;
+    tv.addEventListener('click', () => {
+      $('dishNameInput').value = name;
+      cookThisDish();
+    });
+    const x = document.createElement('button');
+    x.className = 'tag-x';
+    x.title = '移除';
+    x.textContent = '×';
+    x.addEventListener('click', () => {
+      writeJSON(RECENT_DISH_KEY(), readJSON(RECENT_DISH_KEY(), []).filter((n) => n !== name));
+      renderRecentDishes();
+    });
+    chip.append(tv, x);
+    box.appendChild(chip);
+  }
+}
+
+/**
+ * 输入菜名直接出做法。
+ * 走的还是 /recipes/detail，和从菜单里点菜品是同一个接口，
+ * 所以用量换算、忌口规避、渲染全都复用，这里只是补了个自己输入的入口。
+ */
+async function cookThisDish() {
+  if (state.loading) return;
+  const name = $('dishNameInput').value.trim();
+  if (!name) return toast('先输入菜名', 'warn');
+
+  const people = parseInt($('dishPeople').value) || 2;
+  const extra = $('dishExtra').value.trim();
+  // 缓存键要带上口味要求，否则改了要求还会拿到旧结果
+  const key = `${name}|${people}|直接指定|${extra}`;
+
+  if (state.detailCache.has(key)) {
+    rememberDish(name);
+    return renderDetail(state.detailCache.get(key));
+  }
+
+  setLoading(true, `正在写「${name}」的做法…`);
+  try {
+    const detail = await api('/api/recipes/detail', {
+      method: 'POST',
+      body: JSON.stringify({
+        dish: name,
+        people,
+        tastes: extra ? [extra] : [],
+        provider: $('providerSelect').value,
+        model: $('modelSelect').value,
+        thinking: $('deepThinking').checked,
+      }),
+    });
+    state.detailCache.set(key, detail);
+    rememberDish(name);
+    renderDetail(detail);
+  } catch (e) {
+    toast('没写出来：' + e.message, 'err', 4000);
+  } finally {
+    setLoading(false);
+  }
 }
 
 /* ---------- 启动 ---------- */

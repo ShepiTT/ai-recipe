@@ -5,6 +5,10 @@ const { pickKey, todayKey, addDays, formatDate, diffDays, relativeDay, toast } =
 
 Page({
   data: {
+    // 「我就想做某道菜」：不走菜单，直接输菜名看做法
+    dishName: '',
+    recentDishes: [],
+
     ready: false,       // 有菜单且已确认过开始日期
     total: 0,
     cookDay: 0,
@@ -27,6 +31,7 @@ Page({
   },
 
   onShow() {
+    this.setData({ recentDishes: wx.getStorageSync(STORAGE.RECENT_DISH) || [] });
     const { plan, picks, startDate } = app.globalData;
     if (!plan || !picks.length || !startDate) {
       return this.setData({ ready: false });
@@ -107,6 +112,38 @@ Page({
   openDish(e) {
     const name = e.currentTarget.dataset.name;
     wx.navigateTo({ url: `/pages/dish/dish?name=${encodeURIComponent(name)}` });
+  },
+
+  /* ---------- 直接做某道菜 ---------- */
+
+  onDishName(e) { this.setData({ dishName: e.detail.value }); },
+
+  /** 查过的菜名记在本地，下次点一下就能再看 */
+  rememberDish(name) {
+    const list = [name, ...(wx.getStorageSync(STORAGE.RECENT_DISH) || []).filter((x) => x !== name)].slice(0, 12);
+    wx.setStorageSync(STORAGE.RECENT_DISH, list);
+    this.setData({ recentDishes: list });
+  },
+
+  cookNamed() {
+    const name = this.data.dishName.trim();
+    if (!name) return toast('先输入菜名');
+    this.rememberDish(name);
+    this.setData({ dishName: '' });
+    wx.navigateTo({ url: `/pages/dish/dish?name=${encodeURIComponent(name)}` });
+  },
+
+  openRecent(e) {
+    const name = e.currentTarget.dataset.name;
+    this.rememberDish(name);
+    wx.navigateTo({ url: `/pages/dish/dish?name=${encodeURIComponent(name)}` });
+  },
+
+  removeRecent(e) {
+    const name = e.currentTarget.dataset.name;
+    const list = (wx.getStorageSync(STORAGE.RECENT_DISH) || []).filter((x) => x !== name);
+    wx.setStorageSync(STORAGE.RECENT_DISH, list);
+    this.setData({ recentDishes: list });
   },
 
   goPlan() { wx.navigateTo({ url: '/pages/plan/plan' }); },

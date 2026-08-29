@@ -936,3 +936,22 @@ input[type="range"]::-moz-range-thumb {
   box-shadow: inset 0 0 0 1px var(--primary);
 }
 .slot-btn.on span { filter: none; }
+
+/* 三个模式，标签要挤得下 */
+.mode-tabs { grid-template-columns: repeat(3, 1fr); }
+.mode-tab { padding: 10px 4px; font-size: 13px; }
+
+/* 最近查过的菜 */
+.recent-dish {
+  display: inline-flex; align-items: center; gap: 2px;
+  padding: 4px 6px 4px 12px; border-radius: 999px; font-size: 13px;
+  background: var(--panel-sunk); border: 1px solid var(--line);
+}
+.recent-dish-name {
+  font-family: inherit; font-size: 13px; cursor: pointer;
+  border: none; background: transparent; color: var(--ink); padding: 0;
+}
+.recent-dish:hover { border-color: var(--primary); }
+.recent-dish:hover .recent-dish-name { color: var(--primary-dark); }
+#dishNameInput { width: 100%; font-size: 15px; }
+#dishExtra { width: 100%; }

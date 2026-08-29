@@ -1,3 +1,20 @@
+<!-- 不走菜单，直接指定一道菜 -->
+<view class="card named-box">
+  <view class="named-row">
+    <input class="named-input" value="{{dishName}}" bindinput="onDishName" bindconfirm="cookNamed"
+           confirm-type="search" maxlength="30"
+           placeholder="想做哪道菜？如：红烧肉" placeholder-class="ph" />
+    <view class="ghost-btn on" bindtap="cookNamed">做这道</view>
+  </view>
+  <view class="recent-row" wx:if="{{recentDishes.length}}">
+    <text class="recent-label">最近查过</text>
+    <view wx:for="{{recentDishes}}" wx:key="*this" class="recent-chip">
+      <text data-name="{{item}}" bindtap="openRecent">{{item}}</text>
+      <text class="chip-x" data-name="{{item}}" catchtap="removeRecent">×</text>
+    </view>
+  </view>
+</view>
+
 <view class="page" wx:if="{{ready}}">
 
   <!-- 日期头：只显示日期，不显示时分 -->
