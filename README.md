@@ -276,4 +276,4 @@ ai-recipe/
 
 ## License
 
-MIT
+[PolyForm Noncommercial 1.0.0](LICENSE) — 个人与非商业使用免费，禁止商业销售。

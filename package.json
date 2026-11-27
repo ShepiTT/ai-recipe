@@ -19,7 +19,7 @@
     "llm",
     "express"
   ],
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "engines": {
     "node": ">=18"
   },
